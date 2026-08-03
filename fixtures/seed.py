@@ -64,6 +64,18 @@ def _emit_lineage(urn: str, upstreams: list[str], base_url: str) -> None:
     response.raise_for_status()
 
 
+def set_consumer_lineage(
+    upstreams: list[str], base_url: str = DEFAULT_BASE_URL
+) -> None:
+    """Move the consumer's lineage to one state and stop.
+
+    `seed_schema_ops` writes both states back to back so the aspect API can time
+    travel between them. The MCP path cannot: it only ever answers about now, so
+    the world has to be moved between two live reads rather than in advance.
+    """
+    _emit_lineage(CONSUMER, upstreams, base_url)
+
+
 def seed_schema_ops(base_url: str = DEFAULT_BASE_URL) -> SeededWorld:
     """Write the two lineage states with a measurable gap between them.
 

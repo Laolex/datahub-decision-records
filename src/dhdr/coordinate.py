@@ -59,19 +59,36 @@ def history(
     base_url: str = DEFAULT_BASE_URL,
     max_versions: int = 500,
 ) -> list[AspectVersion]:
-    """Every archived revision of an aspect, oldest first.
+    """Every readable revision of an aspect, oldest first.
 
-    Version 0 is skipped: it is an alias for the newest numbered revision, and
-    including it would double-count the present.
+    Version 0 is skipped as a probe target: it is an alias for the newest
+    numbered revision, and including it would double-count the present. It is
+    read once to learn where the numbering currently ends.
+
+    The walk descends from that newest version rather than ascending from 1,
+    because DataHub's retention deletes the oldest revisions of a busy aspect.
+    Ascending from 1 and stopping at the first gap reports a long-lived aspect
+    as having no history whatsoever — the reads then bind to nothing, and the
+    adapter fails silently on exactly the instances that have been running long
+    enough for any of this to matter. Descending, the first gap is the retention
+    floor and everything above it is real.
     """
+    try:
+        newest = read_aspect(urn, aspect, version=0, base_url=base_url)
+    except requests.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code in (400, 404):
+            return []
+        raise
+
     revisions: list[AspectVersion] = []
-    for candidate in range(1, max_versions + 1):
+    for candidate in range(newest.version, max(newest.version - max_versions, 0), -1):
         try:
             revisions.append(read_aspect(urn, aspect, version=candidate, base_url=base_url))
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code in (400, 404):
                 break
             raise
+    revisions.reverse()
     return revisions
 
 
