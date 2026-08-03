@@ -14,8 +14,8 @@ passing.
 
 Built for **Build with DataHub — The Agent Hackathon**, track *Agents That Do Real Work*.
 
-> **Status: in progress.** The capture core and revision binding are built and tested against
-> a live DataHub Core v1.5.0.6 instance. The scenario agent, the certifier, write-back to
+> **Status: in progress.** The capture core, revision binding and the schema-ops agent are
+> built and tested against a live DataHub Core v1.5.0.6 instance. The certifier, write-back to
 > DataHub, and the CLI are landing over the next few days. Sections below marked *(pending)*
 > describe work not yet in the repository. Nothing here claims a result it has not produced.
 
@@ -46,9 +46,11 @@ the facts do not discriminate. Both are **unbound**, and an unbound deciding rea
 capability class to none — never "C2, but one read is unbound", which is exactly the phrasing a
 hurried reader takes as certification.
 
-**The recorded agent** *(pending)* decides over real datasets from DataHub's
-`showcase-ecommerce` datapack, emitting a [Reckon](https://pypi.org/project/reckon-rcdr/)
-decision record as it goes.
+**The recorded agent** (`scenarios/schema_ops.py`) decides whether dropping a column is safe,
+over real datasets from DataHub's `showcase-ecommerce` datapack, emitting a
+[Reckon](https://pypi.org/project/reckon-rcdr/) decision record as it goes. It reads the same
+lineage either through MCP or through the aspect API and records the decision identically, so
+the scenario is not written twice and cannot drift between the two.
 
 **The certifier** *(pending)* reports a capability class — C0 identity, C1 tightening, C2
 loosening, C3 state-coupled — never a percentage. A score over incommensurable kinds of
@@ -80,10 +82,20 @@ pip install -e '.[dev]'
 DATAHUB_GMS_URL=http://localhost:8080 python -m pytest -v
 ```
 
-12 tests currently pass, including an end-to-end case in which an MCP `get_lineage` call binds
-to aspect revision v10 with `value_source == "mcp"`, proving the decision input was the
-protocol response rather than a re-fetch, and a race-guard case asserting that a mismatched
-payload is left unbound rather than guessed.
+17 tests currently pass. The ones worth knowing about:
+
+- the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
+  pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
+  with the two records naming different revisions;
+- an MCP read binds with `value_source == "mcp"`, proving the decision input was the protocol
+  response rather than a re-fetch;
+- a mismatched payload is left unbound rather than guessed;
+- history survives DataHub's retention pruning the oldest aspect versions.
+
+Note that the flip test needs GMS's lineage cache disabled
+(`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`). With the shipped default a lineage change reaches the
+graph index in seconds but stays invisible to `get_lineage` for hours, and the test times out
+rather than passing on stale context.
 
 ## Reproduce
 
