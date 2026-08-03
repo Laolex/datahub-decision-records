@@ -115,40 +115,6 @@ def lineage_facts(payload: dict) -> frozenset[str]:
     return frozenset(urns)
 
 
-def bind_revision(
-    urn: str,
-    aspect: str,
-    observed_payload: dict,
-    at_ms: int,
-    *,
-    base_url: str = DEFAULT_BASE_URL,
-    extract=lineage_facts,
-) -> AspectVersion | None:
-    """Bind an observed payload to the revision that produced it, or to nothing.
-
-    Timestamp resolution proposes a candidate; the facts must confirm it. A
-    write can land between the agent's read and ours, and then the nearest
-    revision by timestamp is not the revision that decided (invariant 8).
-
-    Ambiguity is also unbound: where more than one revision at or before
-    `at_ms` carries the same facts, nothing discriminates between them and the
-    honest answer is that we do not know which one the agent saw.
-    """
-    observed = extract(observed_payload)
-    candidates = [
-        revision
-        for revision in history(urn, aspect, base_url=base_url)
-        if revision.last_observed_ms <= at_ms
-    ]
-    matching = [revision for revision in candidates if extract(revision.value) == observed]
-
-    if len(matching) != 1:
-        # zero: the payload belongs to no revision we can see.
-        # many: the facts do not discriminate between them.
-        return None
-    return matching[0]
-
-
 def resolve_at(
     urn: str,
     aspect: str,
@@ -170,3 +136,37 @@ def resolve_at(
     if not in_force:
         return None
     return max(in_force, key=lambda revision: revision.last_observed_ms)
+
+
+def bind_revision(
+    urn: str,
+    aspect: str,
+    observed_payload: dict,
+    at_ms: int,
+    *,
+    base_url: str = DEFAULT_BASE_URL,
+    extract=lineage_facts,
+) -> AspectVersion | None:
+    """Bind an observed payload to the revision that produced it, or to nothing.
+
+    Exactly one revision is in force at any instant: the newest at or before
+    `at_ms`. That revision is the only candidate. The facts must then confirm
+    it — if they disagree, a write landed between the agent's read and ours and
+    the nearest revision by timestamp is not the revision that decided
+    (invariant 8).
+
+    Note what is deliberately *not* treated as ambiguity. A world that returns
+    to an earlier state produces several revisions carrying identical facts —
+    ``[orders] -> [] -> [orders]`` is an ordinary pipeline change followed by a
+    revert. Only one of them was in force when the agent read, so there is
+    nothing to disambiguate. Rejecting such a read would refuse to certify the
+    most common shape of metadata change there is.
+    """
+    observed = extract(observed_payload)
+    in_force = resolve_at(urn, aspect, at_ms, base_url=base_url)
+    if in_force is None:
+        return None
+    if extract(in_force.value) != observed:
+        # The agent saw something the revision in force does not account for.
+        return None
+    return in_force
