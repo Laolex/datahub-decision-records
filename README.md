@@ -97,6 +97,35 @@ Note that the flip test needs GMS's lineage cache disabled
 graph index in seconds but stays invisible to `get_lineage` for hours, and the test times out
 rather than passing on stale context.
 
+## Ablation
+
+Remove one captured field at a time and see what the certifier can still claim. An entry that
+cannot show which part of its own record is load-bearing has not demonstrated that the record is
+necessary. Reproduce with `pytest tests/test_ablation.py -s`.
+
+```
+removed                        class still available
+(none — full record)           C2
+execution.pure                 none
+predicate.id                   C0
+policy.resolved_value          C0
+candidates.completeness        C1
+policy.resolution.revision     C2
+read binding (unbound read)    none
+```
+
+The fifth row is the one worth reporting, and it is not flattering: **deleting the revision from
+the record costs nothing.** The underlying verifier has no concept of a DataHub aspect version,
+so a record carrying a revision and a record missing one certify identically. The revision in the
+record is documentation for whoever reads it later. It is not evidence, and it does not defend
+itself.
+
+What is load-bearing is the last row — the binding. A read that could not be tied to a revision
+collapses the class to none. So this project's contribution to soundness is the *refusal*: the
+value is in declining to certify a decision whose world cannot be named, not in annotating a
+record with a version string. Both results are pinned by tests, so if the upstream verifier ever
+starts checking the revision, this section is what breaks.
+
 ## Reproduce
 
 *(pending)* — the exact DataHub Core version, the datapack ingest recipe, and the commands to
