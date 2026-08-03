@@ -75,6 +75,80 @@ def history(
     return revisions
 
 
+def lineage_facts(payload: dict) -> frozenset[str]:
+    """The deciding facts of a lineage payload, canonicalised to a set of URNs.
+
+    Two shapes reduce to the same facts:
+
+    - the aspect API returns ``{"upstreams": [{"dataset": urn, ...}, ...]}``
+    - MCP ``get_lineage`` returns
+      ``{"upstreams": {"searchResults": [{"entity": {"urn": ...}}], "total": N}}``
+
+    One caveat is deliberate. MCP resolves upstreams that exist *as entities*;
+    the aspect lists upstreams that were *declared*. A dangling declared
+    upstream appears in one and not the other, the fact sets disagree, and the
+    read is correctly reported unbound — we genuinely cannot prove which
+    revision the agent saw. Conservative, and honest about why.
+    """
+    upstreams = payload.get("upstreams")
+    if upstreams is None:
+        return frozenset()
+
+    items: list = []
+    if isinstance(upstreams, dict):
+        items = upstreams.get("searchResults") or []
+    elif isinstance(upstreams, list):
+        items = upstreams
+
+    urns: set[str] = set()
+    for item in items:
+        if isinstance(item, str):
+            urns.add(item)
+        elif isinstance(item, dict):
+            entity = item.get("entity")
+            if isinstance(entity, dict) and entity.get("urn"):
+                urns.add(entity["urn"])
+            else:
+                candidate = item.get("dataset") or item.get("urn")
+                if candidate:
+                    urns.add(candidate)
+    return frozenset(urns)
+
+
+def bind_revision(
+    urn: str,
+    aspect: str,
+    observed_payload: dict,
+    at_ms: int,
+    *,
+    base_url: str = DEFAULT_BASE_URL,
+    extract=lineage_facts,
+) -> AspectVersion | None:
+    """Bind an observed payload to the revision that produced it, or to nothing.
+
+    Timestamp resolution proposes a candidate; the facts must confirm it. A
+    write can land between the agent's read and ours, and then the nearest
+    revision by timestamp is not the revision that decided (invariant 8).
+
+    Ambiguity is also unbound: where more than one revision at or before
+    `at_ms` carries the same facts, nothing discriminates between them and the
+    honest answer is that we do not know which one the agent saw.
+    """
+    observed = extract(observed_payload)
+    candidates = [
+        revision
+        for revision in history(urn, aspect, base_url=base_url)
+        if revision.last_observed_ms <= at_ms
+    ]
+    matching = [revision for revision in candidates if extract(revision.value) == observed]
+
+    if len(matching) != 1:
+        # zero: the payload belongs to no revision we can see.
+        # many: the facts do not discriminate between them.
+        return None
+    return matching[0]
+
+
 def resolve_at(
     urn: str,
     aspect: str,
