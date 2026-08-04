@@ -145,6 +145,22 @@ value is in declining to certify a decision whose world cannot be named, not in 
 record with a version string. Both results are pinned by tests, so if the upstream verifier ever
 starts checking the revision, this section is what breaks.
 
+## Upstream
+
+Two findings from this build were filed back, both reproducible on DataHub Core v1.5.0.6:
+
+- [acryldata/mcp-server-datahub#181](https://github.com/acryldata/mcp-server-datahub/issues/181)
+  — an optional point-in-time parameter for context reads. No read tool accepts a version or
+  timestamp, and no shipped GraphQL selection requests `systemMetadata`, so a read resolves to
+  *now* and the response carries nothing that dates it. The proposal defaults to current so
+  nothing breaks, with a smaller fallback (echo the resolved version in responses) that needs no
+  time travel at all. This is the gap the whole project works around.
+- [datahub-project/datahub#18851](https://github.com/datahub-project/datahub/issues/18851)
+  — `institutionalMemory` has no registered patch template, so `PATCH` fails with a null-template
+  `NullPointerException`. Eight other dataset aspects handle the same request, so it is a
+  per-aspect gap. This is the reason write-back here is read-append-write rather than an atomic
+  append.
+
 ## Reproduce
 
 *(pending)* — the exact DataHub Core version, the datapack ingest recipe, and the commands to
