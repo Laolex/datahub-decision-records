@@ -24,7 +24,29 @@ block on that page was produced by the code here, against a live DataHub Core in
 
 ## Quickstart
 
-From a running DataHub to a certified decision, in one command:
+**Three ways in, cheapest first.**
+
+**1. Read the outputs — no setup at all.** [`examples/`](examples/) holds real artifacts from a
+real run: both decision records, both certificates, the live MCP transcript, the SARIF the CI gate
+uploads, the ablation table, and what a later reader inherits from `institutionalMemory`. The
+[hosted walkthrough](https://laolex.github.io/datahub-decision-records/) shows the same with
+commentary, and the certificate links on it resolve.
+
+**2. Run the code — no DataHub needed, about a minute.** The unit tests cover the certifier, the
+SARIF mapping, the change artifact and the ablation, none of which touch a live instance:
+
+```bash
+git clone https://github.com/Laolex/datahub-decision-records && cd datahub-decision-records
+pip install -e '.[dev]'
+pytest -q          # 22 passed, 32 skipped — the skipped ones need a live DataHub
+```
+
+The tests that *do* need DataHub skip by marker rather than failing, so a green run here means
+something. This includes the ablation, which is the part that reports honestly on what is and is
+not load-bearing in this design.
+
+**3. The whole thing against a live DataHub.** From a running instance to a certified decision, in
+one command:
 
 ```bash
 pip install -e '.[dev]'
