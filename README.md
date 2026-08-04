@@ -61,6 +61,13 @@ missing evidence manufactures false confidence. C3 is certified as a *boundary*:
 decision mutates metadata a later decision reads, the certificate states where deductive
 evidence ends and counterfactual inference begins, and claims nothing past that line.
 
+It also refuses a pairing it cannot justify. `certify` receives the record and the captured
+reads as separate arguments, and nothing about the call obliges them to describe the same
+decision — every individual piece can be honest while the assembly is wrong, which produces a
+clean-looking certificate over a decision that never happened. So the record's revision must
+match a revision some supplied read actually bound to, or the class collapses to none. That
+check needs no extra capture: the record already names the revision it was decided against.
+
 **Write-back** (`src/dhdr/publish.py`) puts the certificate into the dataset's
 `institutionalMemory`, so the next agent or engineer inherits what was decided, against which
 revision, and how far the evidence went — without rerunning anything. The description is a
@@ -125,7 +132,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-42 tests currently pass. The ones worth knowing about:
+45 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,

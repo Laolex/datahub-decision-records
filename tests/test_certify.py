@@ -67,6 +67,48 @@ def test_certificate_never_reports_a_percentage():
     assert "%" not in rendered
 
 
+OTHER_DECISIONS_READ = CapturedRead(
+    "get_lineage", "urn:x", "upstreamlineage", 99, 1785762999999, {"upstreams": []}, True
+)
+
+
+def test_reads_from_another_decision_are_refused_not_certified():
+    """The record names the revision it was decided against. If no read supplied
+    that revision, these two arguments did not come from the same decision, and
+    certifying them would produce a clean-looking certificate over a pairing
+    that never happened.
+
+    This is the one way the whole design can be defeated from the caller's side:
+    every individual piece is honest, and the assembly is wrong.
+    """
+    from dhdr.certify import MISPAIRED_READS
+
+    cert = certify(_record(), [OTHER_DECISIONS_READ], requested="C2")
+    assert cert.cls is None
+    assert cert.satisfied is False
+    assert MISPAIRED_READS in cert.missing
+    assert "Capability class: none" in cert.render()
+
+
+def test_a_matching_revision_still_certifies():
+    """The guard must not reject the ordinary case: the record's revision is v2
+    and one of the reads bound to v2."""
+    cert = certify(_record(), [BOUND, OTHER_DECISIONS_READ], requested="C2")
+    assert cert.cls == "C2"
+
+
+def test_a_record_with_no_revision_is_not_checked_for_pairing():
+    """An unbound decision omits the revision key entirely. There is nothing to
+    match against, and the unbound read has already collapsed the class — this
+    must not be reported as a *second*, different failure."""
+    from dhdr.certify import MISPAIRED_READS
+
+    record = _record(policy={"resolved_value": 0, "resolution": {"provenance": "unknown"}})
+    cert = certify(record, [UNBOUND], requested="C2")
+    assert cert.cls is None
+    assert MISPAIRED_READS not in cert.missing
+
+
 def test_self_write_boundary_comes_from_evidence_not_assertion():
     """The agent publishing its own certificate is a state mutation a later
     decision may read. That boundary must follow from a write that demonstrably

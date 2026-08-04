@@ -23,6 +23,11 @@ SELF_WRITE_BOUNDARY = (
     "replay. Deductive evidence ends at the publish step."
 )
 
+MISPAIRED_READS = (
+    "the record names a revision that none of the supplied reads bound to; the record and the "
+    "reads are not from the same decision and no capability class is certifiable"
+)
+
 UNSOUND_UNBOUND = (
     "a deciding read could not be bound to an aspect revision; "
     "no capability class is certifiable"
@@ -55,6 +60,29 @@ class Certificate:
         return "\n".join(lines)
 
 
+def _is_mispaired(record: dict, reads: list[CapturedRead]) -> bool:
+    """True when the record was decided against a revision no supplied read saw.
+
+    `certify` takes the record and the reads as two separate arguments, and
+    nothing about the call obliges them to describe the same decision. Every
+    individual piece can be honest while the assembly is wrong — which is the
+    one way this design can be defeated from the caller's side, and it produces
+    a certificate that looks clean.
+
+    The record already names its revision, so the check needs no new capture:
+    if `policy.resolution.revision` is present, some bound read must have
+    resolved to it. A record with no revision is not checked — there is nothing
+    to match, and the unbound read that caused it has already collapsed the
+    class on its own.
+    """
+    revision = (record.get("policy") or {}).get("resolution", {}).get("revision")
+    if revision is None:
+        return False
+    return not any(
+        read.resolved and str(read.revision) == str(revision) for read in reads
+    )
+
+
 def certify(
     record: dict,
     reads: list[CapturedRead],
@@ -82,6 +110,15 @@ def certify(
     missing = list(report.missing)
     if publish_events:
         missing.append(SELF_WRITE_BOUNDARY)
+
+    if _is_mispaired(record, reads):
+        return Certificate(
+            cls=None,
+            satisfied=False,
+            missing=[MISPAIRED_READS, *missing],
+            c3_boundary=boundary,
+            unbound_reads=unbound,
+        )
 
     if unbound:
         return Certificate(
