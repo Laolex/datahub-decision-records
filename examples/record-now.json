@@ -1,7 +1,7 @@
 {
   "action": {
     "id": "drop_column",
-    "params_digest": "sha256:c6c73e4fe0085d89d9fe84c02fd1fa947c7858a58ae6f6d59f0699a554b4bde2"
+    "params_digest": "sha256:c5036a0dfef7f44c0970f03a8fae903ec7780b36544ca475fe79bf4c71931b60"
   },
   "candidates": {
     "completeness": "exhaustive",
@@ -28,7 +28,7 @@
     "type": "int",
     "value": 1
   },
-  "decision_id": "d-acdff3650971",
+  "decision_id": "d-d6ec78fb8fc2",
   "execution": {
     "clock": null,
     "deps_digest": "sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2",
@@ -42,7 +42,7 @@
     "key": "max_safe_consumers",
     "resolution": {
       "provenance": "bundled",
-      "revision": "362",
+      "revision": "398",
       "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage"
     },
     "resolved_value": 0
@@ -56,12 +56,12 @@
   "reads": [
     {
       "key": "downstream_consumers",
-      "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v362",
+      "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v398",
       "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
     }
   ],
   "run_id": "example-now",
   "sequence": 0,
-  "ts": "2026-08-04T17:26:42.614381+00:00",
+  "ts": "2026-08-04T17:55:10.455695+00:00",
   "writes": []
 }

@@ -72,13 +72,21 @@ it was made against.</p>
 <pre>
 === as the agent saw it ===
 outcome:  admit
-revision: v367  (lastObserved=1785864420531)
+revision: v403  (lastObserved=1785866134577)
 Capability class: C2
+proposed change:
+  -- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.
+  -- proposed — not applied by dhdr
+  ALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;
 
 === as it actually was ===
 outcome:  reject
-revision: v368  (lastObserved=1785864422884)
+revision: v404  (lastObserved=1785866142450)
 Capability class: C2
+proposed change:
+  -- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.
+  -- proposed — not applied by dhdr
+  COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS &#x27;deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed&#x27;;
 
 Same agent. Same call, through the real MCP server. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.</pre>
@@ -98,14 +106,14 @@ the world is moved between two live reads instead.</p>
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      admit
-revision:     v365
+revision:     v401
 Capability class: C2
 
 === consumer wired up ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      reject
-revision:     v366
+revision:     v402
 Capability class: C2
 
 The agent made the identical MCP call both times.
@@ -128,18 +136,18 @@ rerunning anything.</p>
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785864404463
+        &quot;time&quot;: 1785866117870
       },
-      &quot;description&quot;: &quot;decision=admit against v363 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785864404463.json&quot;
+      &quot;description&quot;: &quot;decision=admit against v399 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785866117870.json&quot;
     },
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785864409612
+        &quot;time&quot;: 1785866123004
       },
-      &quot;description&quot;: &quot;decision=reject against v364 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785864409612.json&quot;
+      &quot;description&quot;: &quot;decision=reject against v400 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785866123004.json&quot;
     }
   ]
 }</pre>
@@ -182,7 +190,7 @@ the annotation. Both results are pinned by tests.</p>
 <pre>{
   &quot;action&quot;: {
     &quot;id&quot;: &quot;drop_column&quot;,
-    &quot;params_digest&quot;: &quot;sha256:c6c73e4fe0085d89d9fe84c02fd1fa947c7858a58ae6f6d59f0699a554b4bde2&quot;
+    &quot;params_digest&quot;: &quot;sha256:58095b73555a42fb25a5cbf38433230df8fb76be6801dcf96bb54a609f3f37d2&quot;
   },
   &quot;candidates&quot;: {
     &quot;completeness&quot;: &quot;exhaustive&quot;,
@@ -209,7 +217,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;type&quot;: &quot;int&quot;,
     &quot;value&quot;: 0
   },
-  &quot;decision_id&quot;: &quot;d-6266af37a031&quot;,
+  &quot;decision_id&quot;: &quot;d-d5623b51244a&quot;,
   &quot;execution&quot;: {
     &quot;clock&quot;: null,
     &quot;deps_digest&quot;: &quot;sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2&quot;,
@@ -223,7 +231,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;key&quot;: &quot;max_safe_consumers&quot;,
     &quot;resolution&quot;: {
       &quot;provenance&quot;: &quot;bundled&quot;,
-      &quot;revision&quot;: &quot;361&quot;,
+      &quot;revision&quot;: &quot;397&quot;,
       &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage&quot;
     },
     &quot;resolved_value&quot;: 0
@@ -237,13 +245,13 @@ the annotation. Both results are pinned by tests.</p>
   &quot;reads&quot;: [
     {
       &quot;key&quot;: &quot;downstream_consumers&quot;,
-      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v361&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v397&quot;,
       &quot;value_digest&quot;: &quot;sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9&quot;
     }
   ],
   &quot;run_id&quot;: &quot;example-then&quot;,
   &quot;sequence&quot;: 0,
-  &quot;ts&quot;: &quot;2026-08-04T17:26:42.386683+00:00&quot;,
+  &quot;ts&quot;: &quot;2026-08-04T17:55:10.248067+00:00&quot;,
   &quot;writes&quot;: []
 }</pre>
 <!-- end:record-then.json -->

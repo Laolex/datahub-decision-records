@@ -49,6 +49,14 @@ the facts do not discriminate. Both are **unbound**, and an unbound deciding rea
 capability class to none — never "C2, but one read is unbound", which is exactly the phrasing a
 hurried reader takes as certification.
 
+**The change artifact.** A verdict nobody can act on is not much use, so each decision carries
+the concrete change it is about: `ALTER TABLE … DROP COLUMN promo_code;` when the drop is
+allowed, and a deprecation comment naming the consumer that still reads it when it is refused. A
+refusal that proposes the safe alternative is the part that does real work. The artifact is
+**proposed and never applied** — `dhdr` decides and records, it does not run migrations, and
+there is deliberately no code here that would. The record commits to it by `params_digest`, so
+the certificate names which change it certified without carrying a copy that could drift.
+
 **The recorded agent** (`scenarios/schema_ops.py`) decides whether dropping a column is safe,
 over real datasets from DataHub's `showcase-ecommerce` datapack, emitting a
 [Reckon](https://pypi.org/project/reckon-rcdr/) decision record as it goes. It reads the same
@@ -176,7 +184,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-49 tests currently pass. The ones worth knowing about:
+54 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,

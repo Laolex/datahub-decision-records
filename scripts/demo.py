@@ -75,6 +75,11 @@ async def run() -> int:
             rule("what the agent decided")
             say(f"  downstream consumers found: 0")
             say(f"  decision: {payload.outcome.upper()}")
+            print()
+            say("and the change it is proposing:")
+            for line in payload.change.render().splitlines():
+                say(f"  {line}", pause=0.3)
+            print()
             beat()
             say("The reasoning is legible and it looks correct. The drop goes ahead.")
             beat()
@@ -91,8 +96,15 @@ async def run() -> int:
             rule("the same call, now")
             say(f"  downstream consumers found: 1")
             say(f"  decision: {payload.outcome.upper()}")
+            print()
+            say("and a different change — it refuses the drop and proposes")
+            say("deprecation instead, naming the consumer that still reads it:")
+            for line in payload.change.render().splitlines():
+                say(f"  {line}", pause=0.3)
+            print()
             beat()
             say("Same agent. Same call, through the same MCP server. Opposite decisions.")
+            say("Two different proposed changes, each bound to the revision behind it.")
             beat(2.0)
 
     before, after = decisions

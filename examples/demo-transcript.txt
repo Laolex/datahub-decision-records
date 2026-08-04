@@ -1,13 +1,21 @@
 
 === as the agent saw it ===
 outcome:  admit
-revision: v367  (lastObserved=1785864420531)
+revision: v403  (lastObserved=1785866134577)
 Capability class: C2
+proposed change:
+  -- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.
+  -- proposed — not applied by dhdr
+  ALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;
 
 === as it actually was ===
 outcome:  reject
-revision: v368  (lastObserved=1785864422884)
+revision: v404  (lastObserved=1785866142450)
 Capability class: C2
+proposed change:
+  -- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.
+  -- proposed — not applied by dhdr
+  COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';
 
 Same agent. Same call, through the real MCP server. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.

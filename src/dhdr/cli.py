@@ -88,29 +88,60 @@ class LiveDecision:
     certificate: Certificate
     published_url: str | None
     record: dict
+    change: object | None = None  # scenarios.schema_ops.ChangeRequest
 
 
-async def _settle(consumer: str, upstreams: list[str], set_lineage, timeout_s=60.0):
+async def _mcp_lineage(consumer: str) -> set[str]:
+    async with McpCaptureProxy() as probe:
+        return set(lineage_facts((await probe.call_lineage(consumer)).value))
+
+
+async def _settle(
+    consumer: str, upstreams: list[str], set_lineage, *, opposite: list[str], timeout_s=45.0
+):
     """Move the world and wait until MCP itself reports the new state.
 
     MCP has no point-in-time parameter — it only ever answers about now — so the
     two halves of the demonstration cannot come from time travel. The world has
     to actually move between two live reads, and this waits for the change to
     reach the lineage query rather than assuming it has.
+
+    One repair is built in. DataHub treats a write whose value already matches
+    the stored aspect as a no-op and emits no change event, so if the graph index
+    has drifted from the aspect store — which happens when OpenSearch is down
+    while writes continue — re-writing the state we want can never fix it. The
+    first timeout therefore forces a genuine transition through the opposite
+    state, which does emit events, and tries again.
     """
-    want = set(upstreams)
+
+    async def converge(deadline: float) -> set[str]:
+        seen: set[str] = set()
+        while time.time() < deadline:
+            seen = await _mcp_lineage(consumer)
+            if seen == set(upstreams):
+                return seen
+            await asyncio.sleep(2)
+        return seen
+
     set_lineage(upstreams)
-    deadline = time.time() + timeout_s
-    seen: set[str] = set()
-    while time.time() < deadline:
-        async with McpCaptureProxy() as probe:
-            seen = set(lineage_facts((await probe.call_lineage(consumer)).value))
-        if seen == want:
-            return
-        await asyncio.sleep(2)
+    seen = await converge(time.time() + timeout_s)
+    if seen == set(upstreams):
+        return
+
+    # Force a real transition, then come back.
+    set_lineage(opposite)
+    await asyncio.sleep(4)
+    set_lineage(upstreams)
+    seen = await converge(time.time() + timeout_s)
+    if seen == set(upstreams):
+        return
+
     raise SystemExit(
-        f"MCP never reported lineage {want} within {timeout_s:.0f}s (saw {seen}).\n"
-        "This is almost certainly GMS's lineage cache — run scripts/preflight.py."
+        f"MCP never reported lineage {set(upstreams)} within {2 * timeout_s:.0f}s "
+        f"(saw {seen}), including after forcing a real transition.\n"
+        "Most likely GMS's lineage cache is on — run scripts/preflight.py.\n"
+        "If preflight passes, check that OpenSearch is up: a graph index that "
+        "drifted while it was down looks exactly like this."
     )
 
 
@@ -134,6 +165,14 @@ async def _decide_live(
         )
     read = proxy.reads[0]
     record = sink.records[0]
+
+    # The concrete change this decision is about. Derived from the same outcome
+    # the predicate produced, so the artifact and the verdict cannot disagree.
+    from scenarios.schema_ops import DEFAULT_COLUMN, proposed_change
+
+    change = proposed_change(
+        target, DEFAULT_COLUMN, outcome=outcome, consumers=(consumer,)
+    )
 
     decided_at_ms = read.response_received_ms or int(time.time() * 1000)
     events: list[dict] = []
@@ -161,6 +200,7 @@ async def _decide_live(
         certificate=certificate,
         published_url=published_url,
         record=record,
+        change=change,
     )
 
 
@@ -192,7 +232,8 @@ async def live_flow(*, cert_base: str = DEFAULT_CERT_BASE, publish: bool = True)
 
     for label, upstreams in (("before", []), ("after", [target])):
         yield "settling", upstreams
-        await _settle(consumer, upstreams, set_lineage)
+        opposite = [target] if not upstreams else []
+        await _settle(consumer, upstreams, set_lineage, opposite=opposite)
         decision = await _decide_live(
             consumer,
             target,
@@ -251,6 +292,10 @@ def _demo(args: argparse.Namespace) -> int:
         print(f"outcome:  {decision.outcome}")
         print(f"revision: v{decision.revision}  (lastObserved={decision.last_observed_ms})")
         print(decision.certificate.render())
+        if decision.change is not None:
+            print("proposed change:")
+            for line in decision.change.render().splitlines():
+                print(f"  {line}")
         if decision.published_url:
             print(f"published: {decision.published_url}")
 
