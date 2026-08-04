@@ -197,6 +197,21 @@ nothing.*
 python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
 ```
 
+**This is not a description of what would happen.** It runs on
+[pull request #1](https://github.com/Laolex/datahub-decision-records/pull/1) of this repository,
+where the certificate arrives as a code-scanning annotation on `pipelines/orders.sql`:
+
+```
+dhdr/decision-certified | pipelines/orders.sql | Capability class: C2
+```
+
+The workflow is [`.github/workflows/dhdr-gate.yml`](.github/workflows/dhdr-gate.yml), and it
+states its own limit at the top: producing a certificate needs a live DataHub to read revisions
+from, which a hosted runner has none of. With `DATAHUB_GMS_URL` configured it generates one in
+CI; otherwise it uploads `examples/decision.sarif.json`, produced against a live DataHub Core
+v1.5.0.6 and committed. Either way the annotation on that PR is a real certificate from a real
+decision — what the fallback does not prove is that CI reached DataHub.
+
 The output is SARIF 2.1.0 ([`examples/decision.sarif.json`](examples/decision.sarif.json)), which
 any code host ingests. SARIF's `level` is ordinal — `none`, `note`, `warning`, `error` — so the
 capability classes map onto it directly and nobody has to invent a percentage on the way:
