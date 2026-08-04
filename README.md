@@ -267,11 +267,13 @@ Two findings from this build were filed back, both reproducible on DataHub Core 
   *now* and the response carries nothing that dates it. The proposal defaults to current so
   nothing breaks, with a smaller fallback (echo the resolved version in responses) that needs no
   time travel at all. This is the gap the whole project works around.
-- [datahub-project/datahub#18851](https://github.com/datahub-project/datahub/issues/18851)
+- [datahub-project/datahub#18851](https://github.com/datahub-project/datahub/issues/18851), fixed by
+  **[PR #18869](https://github.com/datahub-project/datahub/pull/18869)**
   — `institutionalMemory` has no registered patch template, so `PATCH` fails with a null-template
   `NullPointerException`. Eight other dataset aspects handle the same request, so it is a
   per-aspect gap. This is the reason write-back here is read-append-write rather than an atomic
-  append.
+  append — so rather than only report it, the PR adds `InstitutionalMemoryTemplate` following the
+  existing `GlobalTagsTemplate` pattern, with a test for the two-writers case that motivated it.
 
 ## Reproduce
 
