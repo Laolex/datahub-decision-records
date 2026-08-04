@@ -1,0 +1,13 @@
+
+=== as the agent saw it ===
+outcome:  admit
+revision: v139  (lastObserved=1785837820422)
+Capability class: C2
+
+=== as it actually was ===
+outcome:  reject
+revision: v140  (lastObserved=1785837824604)
+Capability class: C2
+
+Same agent. Same call. Opposite decisions.
+The log cannot tell you which world it was made in. The certificate can.

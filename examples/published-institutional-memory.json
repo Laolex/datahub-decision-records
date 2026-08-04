@@ -1,0 +1,20 @@
+{
+  "elements": [
+    {
+      "createStamp": {
+        "actor": "urn:li:corpuser:datahub",
+        "time": 1785837806399
+      },
+      "description": "decision=admit against v135 \u2014 class C2",
+      "url": "https://example.org/certs/1785837806399.json"
+    },
+    {
+      "createStamp": {
+        "actor": "urn:li:corpuser:datahub",
+        "time": 1785837811451
+      },
+      "description": "decision=reject against v136 \u2014 class C2",
+      "url": "https://example.org/certs/1785837811451.json"
+    }
+  ]
+}

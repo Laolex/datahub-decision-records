@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dhdr — decision records for DataHub agents</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfa; --fg: #1a1a18; --muted: #5c5c56; --rule: #dededa;
+  --code-bg: #f2f1ee; --accent: #7a4d1e; --admit: #2f6b3a; --reject: #9a3324;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16161a; --fg: #e8e8e4; --muted: #a0a099; --rule: #33333a;
+          --code-bg: #1e1e23; --accent: #d9a066; --admit: #78c088; --reject: #e08a7a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.65 ui-serif, Georgia, 'Times New Roman', serif; }
+main { max-width: 46rem; margin: 0 auto; padding: 4rem 1.25rem 6rem; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; letter-spacing: -.01em; }
+h2 { font-size: 1.25rem; margin: 3rem 0 .75rem; letter-spacing: -.005em; }
+h3 { font-size: 1rem; margin: 2rem 0 .5rem; color: var(--muted);
+     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+p { margin: 0 0 1rem; }
+.lede { font-size: 1.1rem; color: var(--muted); margin-bottom: 2rem; }
+.law { border-left: 3px solid var(--accent); padding: .25rem 0 .25rem 1rem;
+       margin: 1.5rem 0; font-style: italic; }
+pre { background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px;
+      padding: 1rem; overflow-x: auto; font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-style: normal; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+p code, li code { background: var(--code-bg); padding: .1em .35em; border-radius: 3px; }
+a { color: var(--accent); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 3rem 0; }
+.meta { color: var(--muted); font-size: .9rem; }
+ul { padding-left: 1.25rem; }
+li { margin-bottom: .4rem; }
+.note { background: var(--code-bg); border: 1px solid var(--rule); border-radius: 6px;
+        padding: 1rem 1.15rem; margin: 1.5rem 0; font-size: .95rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Decision records for DataHub agents</h1>
+<p class="lede">An agent that decides from DataHub context &mdash; and can prove which version of
+that context justified each decision.</p>
+
+<p>Reading metadata to decide something is the easy half. The hard half arrives later, when
+someone asks why the agent allowed a column drop that broke a dashboard. The lineage has moved
+since. The log says <em>no consumers found</em>, and nothing in it says whether that was true at
+the time or merely true of a stale read.</p>
+
+<div class="law">A record that cannot name the revision it was made against is not a record of a
+decision.</div>
+
+<p class="meta">Built for Build with DataHub &mdash; The Agent Hackathon, track <em>Agents That
+Do Real Work</em>. Source, tests and full README:
+<a href="https://github.com/Laolex/datahub-decision-records">github.com/Laolex/datahub-decision-records</a></p>
+
+<hr>
+
+<h2>The same call, decided both ways</h2>
+
+<p>The agent asks DataHub for the downstream lineage of a Snowflake table, and drops a column
+only if nothing reads from it. Between these two runs a pipeline change wires a consumer to that
+table. Same agent, same call, opposite outcomes &mdash; and each record names the aspect revision
+it was made against.</p>
+
+<pre>=== as the agent saw it ===
+outcome:  admit
+revision: v139  (lastObserved=1785837820422)
+Capability class: C2
+
+=== as it actually was ===
+outcome:  reject
+revision: v140  (lastObserved=1785837824604)
+Capability class: C2
+
+Same agent. Same call. Opposite decisions.
+The log cannot tell you which world it was made in. The certificate can.</pre>
+
+<p>Both certificates say <code>C2</code>, so both decisions are sound. That is the point: neither
+run was wrong. They saw different worlds, and only the certificate can tell you which.</p>
+
+<h2>Through the real MCP server</h2>
+
+<p>The run above reads DataHub's aspect API, which can be pointed at a past instant. This one
+goes through <code>mcp-server-datahub</code> itself, which only ever answers about now &mdash; so
+the world is moved between two live reads instead.</p>
+
+<pre>=== no consumer yet ===
+tool:         get_lineage (via mcp-server-datahub)
+value_source: mcp
+outcome:      admit
+revision:     v137
+Capability class: C2
+
+=== consumer wired up ===
+tool:         get_lineage (via mcp-server-datahub)
+value_source: mcp
+outcome:      reject
+revision:     v138
+Capability class: C2
+
+The agent made the identical MCP call both times.
+value_source=mcp means it decided on the protocol response, not a re-fetch.</pre>
+
+<p><code>value_source: mcp</code> is load-bearing. It means the agent decided on the protocol
+response it actually received, not on a value re-fetched afterwards. Between two fetches the
+metadata can move, and then the revision on the record is not the revision that decided.</p>
+
+<h2>What the next reader inherits</h2>
+
+<p>A decision that is not published is not inherited. Each certificate is written back to the
+dataset's <code>institutionalMemory</code>, so the next agent or engineer finds it without
+rerunning anything.</p>
+
+<pre>{
+  &quot;elements&quot;: [
+    {
+      &quot;createStamp&quot;: {
+        &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
+        &quot;time&quot;: 1785837806399
+      },
+      &quot;description&quot;: &quot;decision=admit against v135 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://example.org/certs/1785837806399.json&quot;
+    },
+    {
+      &quot;createStamp&quot;: {
+        &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
+        &quot;time&quot;: 1785837811451
+      },
+      &quot;description&quot;: &quot;decision=reject against v136 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://example.org/certs/1785837811451.json&quot;
+    }
+  ]
+}</pre>
+
+<h2>Which part of the record is load-bearing</h2>
+
+<p>Remove one captured field at a time and see what the certifier can still claim. An entry that
+cannot show which part of its own record is doing the work has not demonstrated that the record
+is necessary.</p>
+
+<pre>ABLATION — which captured field is load-bearing
+
+removed                        class still available
+(none — full record)           C2
+execution.pure                 none
+predicate.id                   C0
+policy.resolved_value          C0
+candidates.completeness        C1
+policy.resolution.revision     C2
+read binding (unbound read)    none</pre>
+
+<div class="note">
+<p><strong>The fifth row is not flattering, and it is reported anyway.</strong> Deleting the
+revision from the record costs nothing &mdash; the underlying verifier has no concept of a
+DataHub aspect version, so a record carrying a revision and one missing it certify identically.
+The revision in the record is documentation for whoever reads it later. It is not evidence, and
+it does not defend itself.</p>
+<p style="margin-bottom:0">What is load-bearing is the last row: a read that could not be tied to
+a revision collapses the class to <code>none</code>. The contribution here is the
+<em>refusal</em> &mdash; declining to certify a decision whose world cannot be named &mdash; not
+the annotation. Both results are pinned by tests.</p>
+</div>
+
+<h2>A record, in full</h2>
+
+<pre>{
+  &quot;action&quot;: {
+    &quot;id&quot;: &quot;drop_column&quot;,
+    &quot;params_digest&quot;: &quot;sha256:c6c73e4fe0085d89d9fe84c02fd1fa947c7858a58ae6f6d59f0699a554b4bde2&quot;
+  },
+  &quot;candidates&quot;: {
+    &quot;completeness&quot;: &quot;exhaustive&quot;,
+    &quot;items&quot;: [
+      {
+        &quot;action_id&quot;: &quot;drop_column&quot;,
+        &quot;compared_value&quot;: 0,
+        &quot;outcome&quot;: &quot;admit&quot;,
+        &quot;predicate_id&quot;: &quot;p:61706d6af0ed2414&quot;
+      },
+      {
+        &quot;action_id&quot;: &quot;deprecate_instead&quot;,
+        &quot;compared_value&quot;: 0,
+        &quot;outcome&quot;: &quot;reject&quot;,
+        &quot;predicate_id&quot;: &quot;p:61706d6af0ed2414&quot;
+      }
+    ]
+  },
+  &quot;capture&quot;: {
+    &quot;emitter&quot;: &quot;dhdr/0.1.0&quot;,
+    &quot;sdk_version&quot;: &quot;0.1.1&quot;
+  },
+  &quot;compared&quot;: {
+    &quot;type&quot;: &quot;int&quot;,
+    &quot;value&quot;: 0
+  },
+  &quot;decision_id&quot;: &quot;d-371b2a0fdc6d&quot;,
+  &quot;execution&quot;: {
+    &quot;clock&quot;: null,
+    &quot;deps_digest&quot;: &quot;sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2&quot;,
+    &quot;path_digest&quot;: &quot;sha256:7fc6113230ff8469bc8908c27ae27a40fce1d67723e7449da53ad7e54c589d7d&quot;,
+    &quot;pure&quot;: true,
+    &quot;runtime&quot;: &quot;python3.12.3&quot;,
+    &quot;seed&quot;: null
+  },
+  &quot;outcome&quot;: &quot;admit&quot;,
+  &quot;policy&quot;: {
+    &quot;key&quot;: &quot;max_safe_consumers&quot;,
+    &quot;resolution&quot;: {
+      &quot;provenance&quot;: &quot;bundled&quot;,
+      &quot;revision&quot;: &quot;135&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage&quot;
+    },
+    &quot;resolved_value&quot;: 0
+  },
+  &quot;predicate&quot;: {
+    &quot;expression&quot;: &quot;downstream_consumers lte max_safe_consumers&quot;,
+    &quot;id&quot;: &quot;p:61706d6af0ed2414&quot;,
+    &quot;operator&quot;: &quot;lte&quot;
+  },
+  &quot;rcdr_version&quot;: &quot;0.1&quot;,
+  &quot;reads&quot;: [
+    {
+      &quot;key&quot;: &quot;downstream_consumers&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v135&quot;,
+      &quot;value_digest&quot;: &quot;sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9&quot;
+    }
+  ],
+  &quot;run_id&quot;: &quot;example-then&quot;,
+  &quot;sequence&quot;: 0,
+  &quot;ts&quot;: &quot;2026-08-04T10:03:31.585432+00:00&quot;,
+  &quot;writes&quot;: []
+}</pre>
+
+<h2>Filed upstream</h2>
+
+<p>Two findings from this build went back to the projects they came from:</p>
+<ul>
+<li><a href="https://github.com/acryldata/mcp-server-datahub/issues/181">mcp-server-datahub#181</a>
+&mdash; an optional point-in-time parameter for context reads. No read tool accepts a version or
+timestamp, and no shipped GraphQL selection requests <code>systemMetadata</code>, so a read
+resolves to <em>now</em> and the response carries nothing that dates it. This is the gap the
+whole project works around.</li>
+<li><a href="https://github.com/datahub-project/datahub/issues/18851">datahub#18851</a> &mdash;
+<code>institutionalMemory</code> has no registered patch template, so <code>PATCH</code> fails
+with a null-template exception while eight other dataset aspects handle it. This is why
+write-back here is read-append-write rather than an atomic append, which the README states
+rather than papering over.</li>
+</ul>
+
+<hr>
+<p class="meta">Verified against DataHub Core v1.5.0.6, <code>mcp-server-datahub</code> 0.6.0,
+<code>acryl-datahub</code> 1.6.0.17. Every block on this page is a real artifact produced by
+<code>scripts/generate_examples.py</code>, not a mock-up. Apache-2.0.</p>
+
+</main>
+</body>
+</html>

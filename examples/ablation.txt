@@ -1,0 +1,10 @@
+ABLATION — which captured field is load-bearing
+
+removed                        class still available
+(none — full record)           C2
+execution.pure                 none
+predicate.id                   C0
+policy.resolved_value          C0
+candidates.completeness        C1
+policy.resolution.revision     C2
+read binding (unbound read)    none

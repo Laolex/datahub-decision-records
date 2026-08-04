@@ -14,10 +14,10 @@ passing.
 
 Built for **Build with DataHub — The Agent Hackathon**, track *Agents That Do Real Work*.
 
-> **Status: in progress.** The capture core, revision binding, the schema-ops agent, the
-> certifier and write-back to DataHub are built and tested against a live DataHub Core v1.5.0.6
-> instance. The CLI and the hosted demo are landing over the next few days. Sections below marked *(pending)*
-> describe work not yet in the repository. Nothing here claims a result it has not produced.
+> **Status.** The capture core, revision binding, the schema-ops agent, the certifier,
+> write-back and the demo CLI are built and tested against a live DataHub Core v1.5.0.6
+> instance, and everything in `examples/` was produced by running them. Nothing here claims a
+> result it has not produced.
 
 ## The design law
 
@@ -101,7 +101,28 @@ pip install -e '.[dev]'
 DATAHUB_GMS_URL=http://localhost:8080 python -m pytest -v
 ```
 
-33 tests currently pass. The ones worth knowing about:
+See the two decisions for yourself:
+
+```bash
+python -m dhdr.cli
+```
+
+```
+=== as the agent saw it ===
+outcome:  admit
+revision: v131  (lastObserved=1785837756441)
+Capability class: C2
+
+=== as it actually was ===
+outcome:  reject
+revision: v132  (lastObserved=1785837761548)
+Capability class: C2
+
+Same agent. Same call. Opposite decisions.
+The log cannot tell you which world it was made in. The certificate can.
+```
+
+35 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
@@ -163,8 +184,78 @@ Two findings from this build were filed back, both reproducible on DataHub Core 
 
 ## Reproduce
 
-*(pending)* — the exact DataHub Core version, the datapack ingest recipe, and the commands to
-regenerate every committed artifact in `examples/` will land with the CLI.
+Everything in [`examples/`](examples/) is a real artifact produced by the code in this repo, not
+a description of one — two decision records, their certificates, the demo transcript, the live
+MCP flip, the ablation table, and what a later reader inherits from `institutionalMemory`.
+Regenerate all of it with one command against a live instance:
+
+```bash
+python scripts/generate_examples.py
+```
+
+### The world
+
+Verified against **DataHub Core v1.5.0.6**, `mcp-server-datahub` 0.6.0, `acryl-datahub` 1.6.0.17.
+
+The scenario decides over real datasets from DataHub's own `showcase-ecommerce` datapack, not
+invented URNs — MCP resolves upstreams that exist *as entities*, so a fabricated URN produces a
+demo that silently binds to nothing. Note that `datahub datapack load showcase-ecommerce` does
+**not** fetch the real pack (it writes ~54 bundled records and reports success), so fetch it
+directly and filter the DataHub Cloud aspects that Core's GMS rejects with a 422:
+
+```bash
+mkdir -p datapack && cd datapack
+for f in 01-definitions 02-data 03-context; do
+  curl -sL "https://raw.githubusercontent.com/datahub-project/static-assets/main/datapacks/showcase-ecommerce/$f.json" -o "$f.json"
+done
+
+python - <<'PY'
+import json
+CLOUD_ONLY = {"testResults", "lineageFeatures", "entityInferenceMetadata",
+              "usageFeatures", "documentation"}
+records = json.load(open("02-data.json"))
+keep = [r for r in records
+        if r.get("entityType") == "dataset" and r.get("aspectName") not in CLOUD_ONLY]
+json.dump(keep, open("02-datasets.json", "w"))
+print(f"dataset records kept: {len(keep)}")
+PY
+
+cat > recipe-ds.yml <<'YML'
+source:
+  type: file
+  config:
+    path: ./02-datasets.json
+sink:
+  type: datahub-rest
+  config:
+    server: http://localhost:8080
+YML
+datahub ingest -c recipe-ds.yml
+```
+
+### One required setting
+
+GMS caches lineage search results with a shipped default TTL of a day, and MCP `get_lineage`
+reads through that cache — so a lineage change reaches the graph index within seconds and stays
+invisible to the agent for hours. The flip depends on the world moving between two reads, so set
+`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0` on GMS. With it off, MCP reflects a change in about three
+seconds; with it on, the flip test times out rather than passing on stale context.
+
+## Pre-existing work
+
+Per the hackathon rules, what was not built during the submission window:
+
+- **[`reckon-rcdr`](https://pypi.org/project/reckon-rcdr/) 0.1.1** — my own decision-record
+  format and verifier, published before this event. It supplies the record schema and the
+  capability classes (C0–C3). It knows nothing about DataHub. Everything that binds a record to
+  a metadata revision is new here, and the [ablation](#ablation) reports honestly that the
+  revision field is inert to the upstream verifier — the binding check in this repo is what
+  carries the soundness.
+- **`acryl-datahub` 1.6.0.17** and **`mcp-server-datahub` 0.6.0** — DataHub's own SDK and MCP
+  server, unmodified dependencies.
+
+Written during the window: the capture proxy, revision binding, the schema-ops agent, the
+certifier, write-back, the ablation, the CLI, and the two upstream issues.
 
 ## Invariants
 
