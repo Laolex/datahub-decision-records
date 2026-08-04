@@ -30,6 +30,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # project's own GitHub Pages site rather than a placeholder domain.
 DEFAULT_CERT_BASE = "https://laolex.github.io/datahub-decision-records/certs"
 
+# Where the artifact behind each published URL is written. The URL and the file
+# have to be produced by the same run: publishing a link whose artifact nobody
+# wrote is the failure invariant 10 forbids, and it is easy to do by accident
+# because the write to DataHub succeeds either way.
+CERT_DIR = REPO_ROOT / "docs" / "certs"
+
 
 def quiet_mcp_logging() -> None:
     """Silence the MCP server's per-query debug logging.
@@ -179,6 +185,15 @@ async def _decide_live(
     events: list[dict] = []
     published_url = None
     if publish:
+        _write_certificate_artifact(
+            decided_at_ms,
+            outcome=outcome,
+            revision=read.revision,
+            last_observed_ms=read.last_observed_ms,
+            certificate=certify(record, proxy.reads, requested="C2"),
+            change=change,
+            record=record,
+        )
         published_url = publish_certificate(
             consumer,
             certify(record, proxy.reads, requested="C2"),
@@ -203,6 +218,34 @@ async def _decide_live(
         record=record,
         change=change,
     )
+
+
+def _write_certificate_artifact(
+    decided_at_ms: int, *, outcome, revision, last_observed_ms, certificate, change, record
+) -> Path:
+    """Write the artifact the published URL points at, in the same run."""
+    CERT_DIR.mkdir(parents=True, exist_ok=True)
+    path = CERT_DIR / f"{decided_at_ms}.json"
+    path.write_text(
+        json.dumps(
+            {
+                "outcome": outcome,
+                "revision": revision,
+                "aspect_last_observed_ms": last_observed_ms,
+                "decided_at_ms": decided_at_ms,
+                "capability_class": certificate.cls,
+                "satisfied": certificate.satisfied,
+                "missing": certificate.missing,
+                "certificate": certificate.render(),
+                "proposed_change": change.render() if change is not None else None,
+                "record": record,
+            },
+            indent=2,
+            default=str,
+        )
+        + "\n"
+    )
+    return path
 
 
 async def live_decisions(

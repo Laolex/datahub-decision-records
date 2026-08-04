@@ -1,20 +1,19 @@
 {
   "outcome": "admit",
-  "revision": 461,
-  "aspect_last_observed_ms": 1785882294366,
-  "decided_at_ms": 1785882296041,
+  "revision": 563,
+  "aspect_last_observed_ms": 1785885972273,
+  "decided_at_ms": 1785885973870,
   "capability_class": "C2",
   "satisfied": true,
-  "missing": [
-    "This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step."
-  ],
-  "certificate": "Capability class: C2\nMissing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.",
+  "missing": [],
+  "certificate": "Capability class: C2",
+  "proposed_change": "-- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.\n-- proposed \u2014 not applied by dhdr\nALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-69d63f6cbb0f",
+    "decision_id": "d-ea62db6e826a",
     "run_id": "live-before",
     "sequence": 0,
-    "ts": "2026-08-04T22:24:56.188091+00:00",
+    "ts": "2026-08-04T23:26:13.952851+00:00",
     "outcome": "admit",
     "action": {
       "id": "drop_column",
@@ -41,14 +40,14 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v461"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v563"
       }
     ],
     "writes": [],
     "execution": {
       "runtime": "python3.12.3",
-      "deps_digest": "sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2",
-      "path_digest": "sha256:7fc6113230ff8469bc8908c27ae27a40fce1d67723e7449da53ad7e54c589d7d",
+      "deps_digest": "sha256:8a9832fd1f3f58eef7d8e79bd04a58388087a78f4ff2611c8cae674324f995b9",
+      "path_digest": "sha256:dcd90d9ffa838fbbf522dcbb2f18b2aca20248f61902e5de62bea2c30162010a",
       "seed": null,
       "clock": null,
       "pure": true
@@ -72,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "461"
+        "revision": "563"
       }
     }
   }

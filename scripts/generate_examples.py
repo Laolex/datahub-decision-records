@@ -189,27 +189,11 @@ def main() -> int:
     # Pages serves, so the URL published into DataHub genuinely resolves for a
     # later reader. Invariant 10 asks for exactly that, and a placeholder domain
     # would satisfy the `https://` check while resolving for nobody.
-    decisions = asyncio.run(live_decisions())
-    CERTS.mkdir(parents=True, exist_ok=True)
-    for decision in decisions:
-        (CERTS / f"{decision.decided_at_ms}.json").write_text(
-            json.dumps(
-                {
-                    "outcome": decision.outcome,
-                    "revision": decision.revision,
-                    "aspect_last_observed_ms": decision.last_observed_ms,
-                    "decided_at_ms": decision.decided_at_ms,
-                    "capability_class": decision.certificate.cls,
-                    "satisfied": decision.certificate.satisfied,
-                    "missing": decision.certificate.missing,
-                    "certificate": decision.certificate.render(),
-                    "record": decision.record,
-                },
-                indent=2,
-                default=str,
-            )
-            + "\n"
-        )
+    # `live_decisions` writes each certificate artifact itself now, so the URL it
+    # publishes and the file behind it always come from the same run.
+    for stale in CERTS.glob("*.json"):
+        stale.unlink()
+    asyncio.run(live_decisions(reset=True))
     published = read_published(CONSUMER)
     (EXAMPLES / "published-institutional-memory.json").write_text(
         json.dumps(published, indent=2) + "\n"

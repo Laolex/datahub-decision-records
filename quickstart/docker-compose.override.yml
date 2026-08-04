@@ -1,0 +1,43 @@
+# Drop this next to DataHub's quickstart compose file and bring the stack up as
+# usual. Two things it changes, both of which matter.
+#
+# 1. THE LINEAGE CACHE. GMS caches lineage search results with a shipped default
+#    TTL of a day, and MCP `get_lineage` reads through that cache. A lineage
+#    change reaches the graph index within seconds and then stays invisible to
+#    the agent for hours. This project's demonstration turns on the world moving
+#    between two live reads, so with the cache on the flip simply times out.
+#    With it off, MCP reflects a change in about three seconds.
+#
+# 2. THE PORT BINDINGS, which are a security fix rather than a preference.
+#    DataHub's quickstart compose publishes every service on 0.0.0.0. On a cloud
+#    host that means OpenSearch (no authentication), MySQL, Kafka, the GMS API
+#    and the frontend (default datahub/datahub) are all reachable from the
+#    internet. Neither ufw nor a DOCKER-USER rule stops it: Docker's userspace
+#    proxy terminates those connections on the host, so they never traverse the
+#    chain where such a rule would apply. Binding to loopback is what actually
+#    works.
+#
+#    `!override` is required — a plain `ports:` list in an override file is
+#    *appended* to the upstream one, so the 0.0.0.0 binding would survive.
+#
+#    If you need the UI from another machine, add your private/VPN address as a
+#    second binding rather than reverting to 0.0.0.0, e.g.
+#      - "100.x.y.z:9002:9002"
+
+services:
+  datahub-gms-quickstart:
+    ports: !override ["127.0.0.1:8080:8080"]
+    environment:
+      CACHE_SEARCH_LINEAGE_TTL_SECONDS: '0'
+
+  opensearch:
+    ports: !override ["127.0.0.1:9200:9200"]
+
+  mysql:
+    ports: !override ["127.0.0.1:3306:3306"]
+
+  kafka-broker:
+    ports: !override ["127.0.0.1:9092:9092"]
+
+  frontend-quickstart:
+    ports: !override ["127.0.0.1:9002:9002"]

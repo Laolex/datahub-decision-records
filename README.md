@@ -22,6 +22,38 @@ block on that page was produced by the code here, against a live DataHub Core in
 > instance, and everything in `examples/` was produced by running them. Nothing here claims a
 > result it has not produced.
 
+## Quickstart
+
+From a running DataHub to a certified decision, in one command:
+
+```bash
+pip install -e '.[dev]'
+python scripts/quickstart.py
+```
+
+It checks the instance, ingests DataHub's `showcase-ecommerce` datasets if they are not already
+there, verifies the one setting this depends on, and runs the demo. Safe to re-run.
+
+**Starting DataHub is the one step it does not do for you** — that is `docker compose up` in
+DataHub's own quickstart, and guessing at your compose file would be worse than asking. Copy
+[`quickstart/docker-compose.override.yml`](quickstart/docker-compose.override.yml) next to it
+first; it sets the one required setting and closes a security hole in the stock compose file
+(every service, including an unauthenticated OpenSearch, is published on `0.0.0.0`).
+
+The one required setting, if you would rather apply it by hand: **`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`**
+on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that cache — so a
+lineage change reaches the graph index in seconds and stays invisible to the agent for hours,
+and the demonstration times out rather than passing on stale context.
+
+**Don't want to run anything?** [`examples/`](examples/) holds real artifacts from a real run —
+both decision records, both certificates, the MCP transcript, the SARIF the CI gate uploads, the
+ablation table, and what a later reader inherits from `institutionalMemory`. And the
+[hosted walkthrough](https://laolex.github.io/datahub-decision-records/) shows the same output
+with commentary.
+
+Expect the DataHub bring-up itself to dominate the wall clock on a cold machine; everything after
+it is seconds.
+
 ## The design law
 
 *A record that cannot name the revision it was made against is not a record of a decision.*

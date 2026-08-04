@@ -1,20 +1,19 @@
 {
   "outcome": "reject",
-  "revision": 462,
-  "aspect_last_observed_ms": 1785882296249,
-  "decided_at_ms": 1785882301289,
+  "revision": 550,
+  "aspect_last_observed_ms": 1785885894201,
+  "decided_at_ms": 1785885898973,
   "capability_class": "C2",
   "satisfied": true,
-  "missing": [
-    "This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step."
-  ],
-  "certificate": "Capability class: C2\nMissing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.",
+  "missing": [],
+  "certificate": "Capability class: C2",
+  "proposed_change": "-- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.\n-- proposed \u2014 not applied by dhdr\nCOMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-70618c3ab637",
+    "decision_id": "d-e1d6d30734af",
     "run_id": "live-after",
     "sequence": 0,
-    "ts": "2026-08-04T22:25:01.456069+00:00",
+    "ts": "2026-08-04T23:24:59.108404+00:00",
     "outcome": "reject",
     "action": {
       "id": "drop_column",
@@ -41,7 +40,7 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v462"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v550"
       }
     ],
     "writes": [],
@@ -72,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "462"
+        "revision": "550"
       }
     }
   }
