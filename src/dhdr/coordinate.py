@@ -34,10 +34,20 @@ def read_aspect(
     version: int = 0,
     base_url: str = DEFAULT_BASE_URL,
 ) -> AspectVersion:
-    """Read one aspect pinned to one revision. version=0 means latest."""
+    """Read one aspect pinned to one revision. version=0 means latest.
+
+    Uses the **v3** single-aspect GET. The v2 equivalent returns 400 for several
+    aspects on Core v1.5.0.6 — it fails to deserialise its own `SystemMetadata`
+    — and `upstreamLineage` happens to be one of the ones it handles. Reading
+    only lineage therefore makes the v2 path look correct while it cannot read
+    `glossaryTerms`, `institutionalMemory` or `status` at all; `history()` comes
+    back empty and every read binds to nothing without an error. v3 answers for
+    all of them, takes the same `version` parameter, reports the true version in
+    `systemMetadata`, and 404s past the end of the range.
+    """
     enc = urllib.parse.quote(urn, safe="")
     response = requests.get(
-        f"{base_url}/openapi/v2/entity/dataset/{enc}/{aspect.lower()}",
+        f"{base_url}/openapi/v3/entity/dataset/{enc}/{aspect.lower()}",
         params={"version": version, "systemMetadata": "true"},
         timeout=30,
     )

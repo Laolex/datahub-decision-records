@@ -24,6 +24,32 @@ def test_history_is_ascending_and_stamped():
 
 
 @pytest.mark.integration
+def test_read_aspect_works_for_aspects_beyond_lineage():
+    """The coordinate layer must not be accidentally lineage-only.
+
+    The openapi **v2** single-aspect GET returns 400 for several aspects on Core
+    v1.5.0.6 — it fails to deserialise its own `SystemMetadata`. `upstreamLineage`
+    happens to be unaffected, so a lineage-only test suite reports a healthy
+    coordinate layer that in fact cannot read `glossaryTerms`, `institutionalMemory`
+    or `status` at all. `history()` then returns an empty list and every read binds
+    to nothing, silently.
+
+    Found by adding a second scenario, which is the whole reason to have one.
+    """
+    from fixtures.seed import ACCESS_TARGET, seed_access
+
+    seed_access()
+    latest = read_aspect(ACCESS_TARGET, "glossaryterms", version=0)
+    assert latest.version > 0
+    assert latest.last_observed_ms > 0
+    assert "terms" in latest.value
+
+    revisions = history(ACCESS_TARGET, "glossaryterms")
+    assert len(revisions) >= 2
+    assert resolve_at(ACCESS_TARGET, "glossaryterms", latest.last_observed_ms) is not None
+
+
+@pytest.mark.integration
 def test_history_survives_retention_pruning_of_early_versions():
     """DataHub's retention deletes the oldest versions of a busy aspect.
 

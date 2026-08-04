@@ -101,3 +101,68 @@ def seed_schema_ops(base_url: str = DEFAULT_BASE_URL) -> SeededWorld:
         after_ms=after_ms,
         decision_ms=decision_ms,
     )
+
+
+# Scenario 2 — access and governance.
+#
+# Both the dataset and the term ship in `showcase-ecommerce`. `order_details_replica`
+# is chosen because it has no `glossaryTerms` aspect at all, so seeding it destroys
+# no datapack metadata — writing this aspect on a dataset that already carries terms
+# would silently delete them, since the write replaces the whole aspect.
+ACCESS_TARGET = (
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,"
+    "b2fd91.order_entry_db.analytics.order_details_replica,PROD)"
+)
+RESTRICTED_TERM = "urn:li:glossaryTerm:b2fd91.1598cf93-c199-43a1-8833-fce96faa9a1a"  # "PII"
+
+
+@dataclass(frozen=True)
+class SeededAccessWorld:
+    dataset_urn: str
+    restricted_term: str
+    before_ms: int
+    after_ms: int
+    decision_ms: int
+
+
+def _emit_terms(urn: str, terms: list[str], base_url: str) -> None:
+    body = [
+        {
+            "urn": urn,
+            "glossaryTerms": {
+                "value": {
+                    "terms": [{"urn": t} for t in terms],
+                    "auditStamp": {"time": 0, "actor": "urn:li:corpuser:datahub"},
+                }
+            },
+        }
+    ]
+    response = requests.post(
+        f"{base_url}/openapi/v3/entity/dataset",
+        json=body,
+        params={"async": "false"},
+        timeout=30,
+    )
+    response.raise_for_status()
+
+
+def seed_access(base_url: str = DEFAULT_BASE_URL) -> SeededAccessWorld:
+    """Two states: before the PII term is applied, and after."""
+    _emit_terms(ACCESS_TARGET, [], base_url)
+    before_ms = int(time.time() * 1000)
+
+    time.sleep(2)
+    decision_ms = int(time.time() * 1000)
+    time.sleep(2)
+
+    _emit_terms(ACCESS_TARGET, [RESTRICTED_TERM], base_url)
+    time.sleep(2)
+    after_ms = int(time.time() * 1000)
+
+    return SeededAccessWorld(
+        dataset_urn=ACCESS_TARGET,
+        restricted_term=RESTRICTED_TERM,
+        before_ms=before_ms,
+        after_ms=after_ms,
+        decision_ms=decision_ms,
+    )

@@ -32,7 +32,7 @@ And its companion, which is why this ships as something a team installs rather t
 
 ## How it works
 
-Four units, each independently testable.
+Five units, each independently testable.
 
 **The context proxy** (`src/dhdr/proxy.py`) sits between the agent and DataHub's MCP server.
 It forwards every tool call over real MCP transport and returns *the MCP response itself* to
@@ -41,7 +41,7 @@ never substituted for it, however similar; between two fetches the metadata may 
 and then the revision on the record is not the revision that decided.
 
 **Revision binding** (`src/dhdr/coordinate.py`) resolves the aspect version in force at the
-instant the response was received, via `GET /openapi/v2/entity/{type}/{urn}/{aspect}?version=N`
+instant the response was received, via `GET /openapi/v3/entity/{type}/{urn}/{aspect}?version=N`
 and `systemMetadata.lastObserved`. Proximity in time only *proposes* a candidate. The deciding
 facts extracted from the MCP response and from the aspect must then agree before a binding is
 made. Zero matches means a write landed between the agent's read and ours; more than one means
@@ -91,6 +91,21 @@ The capture core is domain-ignorant by construction. It knows about reads, versi
 predicates and candidate sets. It does not know what a schema, an owner or a pipeline is. If a
 scenario requires a change to the core, the core is wrong.
 
+**A second scenario tests that claim rather than asserting it.**
+`scenarios/access.py` decides whether to grant access to a dataset, flipping when a PII
+glossary term is applied — a different aspect, a different predicate, a different question. It
+required no change to `proxy.py` or `certify.py`, and the knowledge of which glossary terms
+restrict access lives in the scenario, because the core takes an extractor as an argument
+precisely so it never has to hold any.
+
+It did force one change, and it is the reason a second domain was worth building: `read_aspect`
+was reading through the openapi **v2** endpoint, which returns 400 for `glossaryTerms`,
+`institutionalMemory` and `status` on Core v1.5.0.6 — it fails to deserialise its own
+`SystemMetadata` — while handling `upstreamLineage` fine. A lineage-only suite reports a healthy
+coordinate layer that cannot read three aspects at all, with `history()` coming back empty and
+every read binding to nothing, silently. That is now a v3 read, with a regression test that
+exercises a non-lineage aspect.
+
 ## Why the coordinate has to be recovered
 
 DataHub the platform maintains this coordinate already — versioned aspects keyed by version
@@ -132,7 +147,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-45 tests currently pass. The ones worth knowing about:
+49 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
@@ -140,7 +155,8 @@ The log cannot tell you which world it was made in. The certificate can.
 - an MCP read binds with `value_source == "mcp"`, proving the decision input was the protocol
   response rather than a re-fetch;
 - a mismatched payload is left unbound rather than guessed;
-- history survives DataHub's retention pruning the oldest aspect versions.
+- history survives DataHub's retention pruning the oldest aspect versions;
+- a second scenario (access/governance, a different aspect) rides the same core unchanged.
 
 Note that the flip test needs GMS's lineage cache disabled
 (`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`). With the shipped default a lineage change reaches the
