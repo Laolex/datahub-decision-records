@@ -106,6 +106,22 @@ coordinate layer that cannot read three aspects at all, with `history()` coming 
 every read binding to nothing, silently. That is now a v3 read, with a regression test that
 exercises a non-lineage aspect.
 
+## Scenarios
+
+Two, both deciding over real `showcase-ecommerce` entities:
+
+| scenario | reads | flips when |
+|---|---|---|
+| `scenarios/schema_ops.py` — is dropping this column safe? | `upstreamLineage` | a pipeline wires a consumer to the table |
+| `scenarios/access.py` — should this access request be granted? | `glossaryTerms` | a PII term is applied to the dataset |
+
+A third was designed — incident triage over data-quality assertions — and is deliberately **not**
+built. It needs `get_dataset_assertions`, which is not reachable on DataHub Core: the OSS server
+registers eight tools and that is not among them, because the tool sits behind
+`DATA_QUALITY_TOOLS_ENABLED` (default off) *and* a DataHub Cloud version gate. Building it anyway
+would have meant reading assertions by a route the agent surface does not offer — the opposite of
+this project's argument.
+
 ## Why the coordinate has to be recovered
 
 DataHub the platform maintains this coordinate already — versioned aspects keyed by version
@@ -123,8 +139,15 @@ Requires a live DataHub Core instance at `localhost:8080` for the integration te
 
 ```bash
 pip install -e '.[dev]'
+python scripts/preflight.py      # check the instance can demonstrate the flip
 DATAHUB_GMS_URL=http://localhost:8080 python -m pytest -v
 ```
+
+Run the preflight first. A stock DataHub quickstart serves lineage from a cache whose default
+TTL is a day, and `get_lineage` reads through it — so the world changes, the graph index updates
+within seconds, and the agent keeps seeing the old answer. The only symptom is a test that times
+out, which looks like a bug here and is not one. The preflight measures it directly and prints
+the one setting to change.
 
 See the two decisions for yourself:
 
@@ -307,8 +330,9 @@ Per the hackathon rules, what was not built during the submission window:
 - **`acryl-datahub` 1.6.0.17** and **`mcp-server-datahub` 0.6.0** — DataHub's own SDK and MCP
   server, unmodified dependencies.
 
-Written during the window: the capture proxy, revision binding, the schema-ops agent, the
-certifier, write-back, the ablation, the CLI, and the two upstream issues.
+Written during the window: the capture proxy over real MCP transport, revision binding and its
+fact-matching, both scenario agents, the certifier and its pairing guard, write-back into
+`institutionalMemory`, the SARIF emitter, the CLI, the ablation, and the two upstream reports.
 
 ## Invariants
 

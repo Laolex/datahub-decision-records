@@ -127,7 +127,14 @@ async def _settle_mcp_lineage(upstreams: list[str], timeout_s: float = 45.0) -> 
             return
         await asyncio.sleep(2)
     raise AssertionError(
-        f"MCP never reported lineage {want} within {timeout_s}s (saw {seen})"
+        f"MCP never reported lineage {want} within {timeout_s}s (saw {seen}).\n\n"
+        "This is almost certainly GMS's lineage cache, not a fault in dhdr. The shipped\n"
+        "default TTL is a day, and `get_lineage` reads through it, so a lineage change\n"
+        "reaches the graph index in seconds and stays invisible to the agent for hours.\n\n"
+        "Fix, on the GMS container:\n"
+        "    CACHE_SEARCH_LINEAGE_TTL_SECONDS=0\n\n"
+        "Then MCP reflects a lineage change in about 3 seconds, both when an edge is\n"
+        "added and when it is removed. Run `python scripts/preflight.py` to check."
     )
 
 
