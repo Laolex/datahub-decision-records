@@ -14,6 +14,9 @@ passing.
 
 Built for **Build with DataHub — The Agent Hackathon**, track *Agents That Do Real Work*.
 
+**Walkthrough with real output: https://laolex.github.io/datahub-decision-records/** — every
+block on that page was produced by the code here, against a live DataHub Core instance.
+
 > **Status.** The capture core, revision binding, the schema-ops agent, the certifier,
 > write-back and the demo CLI are built and tested against a live DataHub Core v1.5.0.6
 > instance, and everything in `examples/` was produced by running them. Nothing here claims a
