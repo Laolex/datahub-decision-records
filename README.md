@@ -152,7 +152,8 @@ the one setting to change.
 See the two decisions for yourself:
 
 ```bash
-python -m dhdr.cli
+python -m dhdr.cli          # just the result
+python scripts/demo.py      # the same run, paced to be read (or --fast)
 ```
 
 ```
