@@ -67,6 +67,37 @@ def test_certificate_never_reports_a_percentage():
     assert "%" not in rendered
 
 
+def test_self_write_boundary_comes_from_evidence_not_assertion():
+    """The agent publishing its own certificate is a state mutation a later
+    decision may read. That boundary must follow from a write that demonstrably
+    happened — a `published=True` flag from the caller is an assertion about the
+    world, not evidence from it (invariant 11)."""
+    from dhdr.certify import SELF_WRITE_BOUNDARY
+
+    # no publish event -> no boundary claimed
+    assert SELF_WRITE_BOUNDARY not in certify(_record(), [BOUND], requested="C2").missing
+
+    event = {
+        "urn": "urn:x",
+        "aspect": "institutionalMemory",
+        "url": "https://example.org/cert/1",
+        "at_ms": 1,
+    }
+    cert = certify(_record(), [BOUND], requested="C2", publish_events=[event])
+    assert SELF_WRITE_BOUNDARY in cert.missing
+    assert SELF_WRITE_BOUNDARY in cert.render()
+
+
+def test_an_empty_publish_event_list_claims_no_boundary():
+    """An empty list is evidence that nothing was written, not evidence of a
+    write. Treating "the parameter was passed" as the trigger would reintroduce
+    exactly the caller-assertion this is meant to exclude."""
+    from dhdr.certify import SELF_WRITE_BOUNDARY
+
+    cert = certify(_record(), [BOUND], requested="C2", publish_events=[])
+    assert SELF_WRITE_BOUNDARY not in cert.missing
+
+
 @pytest.mark.integration
 def test_certifies_a_record_the_agent_actually_produced():
     """The handcrafted records above fix the certifier's contract. This one

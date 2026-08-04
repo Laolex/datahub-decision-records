@@ -14,9 +14,9 @@ passing.
 
 Built for **Build with DataHub — The Agent Hackathon**, track *Agents That Do Real Work*.
 
-> **Status: in progress.** The capture core, revision binding and the schema-ops agent are
-> built and tested against a live DataHub Core v1.5.0.6 instance. The certifier, write-back to
-> DataHub, and the CLI are landing over the next few days. Sections below marked *(pending)*
+> **Status: in progress.** The capture core, revision binding, the schema-ops agent, the
+> certifier and write-back to DataHub are built and tested against a live DataHub Core v1.5.0.6
+> instance. The CLI and the hosted demo are landing over the next few days. Sections below marked *(pending)*
 > describe work not yet in the repository. Nothing here claims a result it has not produced.
 
 ## The design law
@@ -52,11 +52,30 @@ over real datasets from DataHub's `showcase-ecommerce` datapack, emitting a
 lineage either through MCP or through the aspect API and records the decision identically, so
 the scenario is not written twice and cannot drift between the two.
 
-**The certifier** *(pending)* reports a capability class — C0 identity, C1 tightening, C2
+**The certifier** (`src/dhdr/certify.py`) reports a capability class — C0 identity, C1 tightening, C2
 loosening, C3 state-coupled — never a percentage. A score over incommensurable kinds of
 missing evidence manufactures false confidence. C3 is certified as a *boundary*: where a
 decision mutates metadata a later decision reads, the certificate states where deductive
 evidence ends and counterfactual inference begins, and claims nothing past that line.
+
+**Write-back** (`src/dhdr/publish.py`) puts the certificate into the dataset's
+`institutionalMemory`, so the next agent or engineer inherits what was decided, against which
+revision, and how far the evidence went — without rerunning anything. The description is a
+summary; the URL is the artifact, and it must be resolvable HTTPS, because institutional memory
+a later human cannot open is not memory. The agent's own write is itself state a later decision
+may read, so it is surfaced as a C3 boundary — derived from a recorded publish event, never from
+a flag the caller passed.
+
+One limitation stated plainly, because the alternative would be the failure this project is
+about. The write is **not atomic**. On DataHub Core v1.5.0.6 neither available mechanism works
+for this aspect: `If-Version-Match` is documented as an optimistic-concurrency precondition but
+is not enforced on the write endpoint — a stale-version write returns 200 and overwrites — and
+server-side JSON patch has no template registered for `institutionalMemory`, though it does for
+`globalTags` and `upstreamLineage`. What this module does is read-append-write with a verified
+read-back: it carries forward every element it saw and retries if its own element did not land.
+That preserves anything written before it read, and detects being overwritten. It does not close
+the race where another writer lands between our read and our write. Both facts are pinned by
+tests that fail if the platform starts supporting either mechanism.
 
 The capture core is domain-ignorant by construction. It knows about reads, versions,
 predicates and candidate sets. It does not know what a schema, an owner or a pipeline is. If a
@@ -82,7 +101,7 @@ pip install -e '.[dev]'
 DATAHUB_GMS_URL=http://localhost:8080 python -m pytest -v
 ```
 
-17 tests currently pass. The ones worth knowing about:
+33 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,

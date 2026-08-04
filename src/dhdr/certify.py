@@ -17,6 +17,12 @@ C3_BOUNDARY = (
     "not replay. Deductive evidence ends here."
 )
 
+SELF_WRITE_BOUNDARY = (
+    "This agent published its own certificate to institutionalMemory. That write is state a "
+    "later decision may read, so replay past this point is counterfactual inference, not "
+    "replay. Deductive evidence ends at the publish step."
+)
+
 UNSOUND_UNBOUND = (
     "a deciding read could not be bound to an aspect revision; "
     "no capability class is certifiable"
@@ -54,6 +60,7 @@ def certify(
     reads: list[CapturedRead],
     *,
     requested: str = "C2",
+    publish_events: list[dict] | None = None,
 ) -> Certificate:
     """Turn a record and its reads into a class — or into an explicit refusal.
 
@@ -61,16 +68,26 @@ def certify(
     class alongside a warning (invariant 9). "C2, but one read is unbound" is
     precisely the phrasing a hurried reader takes as certification, and
     manufacturing that impression is the failure this exists to prevent.
+
+    `publish_events` are the events emitted by `publish_certificate` on a
+    successful write. A non-empty list means the agent mutated metadata a later
+    decision may read, so the self-write boundary is appended (invariant 11).
+    The boundary follows from a write that demonstrably happened; an empty list
+    is evidence that nothing was written, and claims nothing.
     """
     report = verify(record, requested=requested)
     unbound = sum(1 for read in reads if not read.resolved)
     boundary = C3_BOUNDARY if requested == "C3" else None
 
+    missing = list(report.missing)
+    if publish_events:
+        missing.append(SELF_WRITE_BOUNDARY)
+
     if unbound:
         return Certificate(
             cls=None,
             satisfied=False,
-            missing=[UNSOUND_UNBOUND, *report.missing],
+            missing=[UNSOUND_UNBOUND, *missing],
             c3_boundary=boundary,
             unbound_reads=unbound,
         )
@@ -78,7 +95,7 @@ def certify(
     return Certificate(
         cls=report.available,
         satisfied=report.satisfied,
-        missing=list(report.missing),
+        missing=missing,
         c3_boundary=boundary,
         unbound_reads=0,
     )
