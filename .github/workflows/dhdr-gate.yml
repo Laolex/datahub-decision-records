@@ -1,0 +1,58 @@
+name: dhdr decision gate
+
+# The certificate belongs where the merge decision is made, not in a terminal
+# someone ran once. This workflow puts it there.
+#
+# Note honestly what runs where. Producing a certificate requires a live DataHub
+# to read revisions from, and a hosted runner has none. So:
+#
+#   - if DATAHUB_GMS_URL is configured (a self-hosted runner with reach to an
+#     instance), the certificate is generated fresh in CI;
+#   - otherwise the workflow uploads `examples/decision.sarif.json`, which was
+#     produced by `python -m dhdr.cli sarif` against a live DataHub Core
+#     v1.5.0.6 and committed as a fixture.
+#
+# Either way the annotation you see on the pull request is a real certificate
+# from a real decision. What the fallback does not prove is that CI reached
+# DataHub — only that the certificate arrives where it is useful.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Produce the certificate
+        env:
+          DATAHUB_GMS_URL: ${{ vars.DATAHUB_GMS_URL }}
+        run: |
+          if [ -n "$DATAHUB_GMS_URL" ]; then
+            echo "Generating a certificate against $DATAHUB_GMS_URL"
+            python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
+          else
+            echo "No DATAHUB_GMS_URL configured; uploading the committed certificate."
+            echo "See examples/demo-transcript.txt for the run that produced it."
+            cp examples/decision.sarif.json dhdr.sarif
+          fi
+          python -c "import json,sys; d=json.load(open('dhdr.sarif')); r=d['runs'][0]['results'][0]; print('level:', r['level']); print(r['message']['text'])"
+
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: dhdr.sarif
+          category: dhdr
