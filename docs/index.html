@@ -68,18 +68,21 @@ only if nothing reads from it. Between these two runs a pipeline change wires a 
 table. Same agent, same call, opposite outcomes &mdash; and each record names the aspect revision
 it was made against.</p>
 
-<pre>=== as the agent saw it ===
+<!-- begin:demo-transcript.txt -->
+<pre>
+=== as the agent saw it ===
 outcome:  admit
-revision: v139  (lastObserved=1785837820422)
+revision: v367  (lastObserved=1785864420531)
 Capability class: C2
 
 === as it actually was ===
 outcome:  reject
-revision: v140  (lastObserved=1785837824604)
+revision: v368  (lastObserved=1785864422884)
 Capability class: C2
 
-Same agent. Same call. Opposite decisions.
+Same agent. Same call, through the real MCP server. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.</pre>
+<!-- end:demo-transcript.txt -->
 
 <p>Both certificates say <code>C2</code>, so both decisions are sound. That is the point: neither
 run was wrong. They saw different worlds, and only the certificate can tell you which.</p>
@@ -90,22 +93,24 @@ run was wrong. They saw different worlds, and only the certificate can tell you 
 goes through <code>mcp-server-datahub</code> itself, which only ever answers about now &mdash; so
 the world is moved between two live reads instead.</p>
 
+<!-- begin:mcp-flip.txt -->
 <pre>=== no consumer yet ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      admit
-revision:     v137
+revision:     v365
 Capability class: C2
 
 === consumer wired up ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      reject
-revision:     v138
+revision:     v366
 Capability class: C2
 
 The agent made the identical MCP call both times.
 value_source=mcp means it decided on the protocol response, not a re-fetch.</pre>
+<!-- end:mcp-flip.txt -->
 
 <p><code>value_source: mcp</code> is load-bearing. It means the agent decided on the protocol
 response it actually received, not on a value re-fetched afterwards. Between two fetches the
@@ -117,26 +122,28 @@ metadata can move, and then the revision on the record is not the revision that 
 dataset's <code>institutionalMemory</code>, so the next agent or engineer finds it without
 rerunning anything.</p>
 
+<!-- begin:published-institutional-memory.json -->
 <pre>{
   &quot;elements&quot;: [
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785837806399
+        &quot;time&quot;: 1785864404463
       },
-      &quot;description&quot;: &quot;decision=admit against v135 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://example.org/certs/1785837806399.json&quot;
+      &quot;description&quot;: &quot;decision=admit against v363 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785864404463.json&quot;
     },
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785837811451
+        &quot;time&quot;: 1785864409612
       },
-      &quot;description&quot;: &quot;decision=reject against v136 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://example.org/certs/1785837811451.json&quot;
+      &quot;description&quot;: &quot;decision=reject against v364 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785864409612.json&quot;
     }
   ]
 }</pre>
+<!-- end:published-institutional-memory.json -->
 
 <h2>Which part of the record is load-bearing</h2>
 
@@ -144,6 +151,7 @@ rerunning anything.</p>
 cannot show which part of its own record is doing the work has not demonstrated that the record
 is necessary.</p>
 
+<!-- begin:ablation.txt -->
 <pre>ABLATION — which captured field is load-bearing
 
 removed                        class still available
@@ -154,6 +162,7 @@ policy.resolved_value          C0
 candidates.completeness        C1
 policy.resolution.revision     C2
 read binding (unbound read)    none</pre>
+<!-- end:ablation.txt -->
 
 <div class="note">
 <p><strong>The fifth row is not flattering, and it is reported anyway.</strong> Deleting the
@@ -169,6 +178,7 @@ the annotation. Both results are pinned by tests.</p>
 
 <h2>A record, in full</h2>
 
+<!-- begin:record-then.json -->
 <pre>{
   &quot;action&quot;: {
     &quot;id&quot;: &quot;drop_column&quot;,
@@ -199,7 +209,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;type&quot;: &quot;int&quot;,
     &quot;value&quot;: 0
   },
-  &quot;decision_id&quot;: &quot;d-371b2a0fdc6d&quot;,
+  &quot;decision_id&quot;: &quot;d-6266af37a031&quot;,
   &quot;execution&quot;: {
     &quot;clock&quot;: null,
     &quot;deps_digest&quot;: &quot;sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2&quot;,
@@ -213,7 +223,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;key&quot;: &quot;max_safe_consumers&quot;,
     &quot;resolution&quot;: {
       &quot;provenance&quot;: &quot;bundled&quot;,
-      &quot;revision&quot;: &quot;135&quot;,
+      &quot;revision&quot;: &quot;361&quot;,
       &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage&quot;
     },
     &quot;resolved_value&quot;: 0
@@ -227,15 +237,16 @@ the annotation. Both results are pinned by tests.</p>
   &quot;reads&quot;: [
     {
       &quot;key&quot;: &quot;downstream_consumers&quot;,
-      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v135&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v361&quot;,
       &quot;value_digest&quot;: &quot;sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9&quot;
     }
   ],
   &quot;run_id&quot;: &quot;example-then&quot;,
   &quot;sequence&quot;: 0,
-  &quot;ts&quot;: &quot;2026-08-04T10:03:31.585432+00:00&quot;,
+  &quot;ts&quot;: &quot;2026-08-04T17:26:42.386683+00:00&quot;,
   &quot;writes&quot;: []
 }</pre>
+<!-- end:record-then.json -->
 
 <h2>Filed upstream</h2>
 

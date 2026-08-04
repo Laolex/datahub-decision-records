@@ -34,6 +34,7 @@ from fixtures.seed import (  # noqa: E402
 from scenarios.schema_ops import decide_drop_column, decide_drop_column_mcp  # noqa: E402
 
 EXAMPLES = REPO / "examples"
+HOSTED = REPO / "docs" / "index.html"
 CERTS = REPO / "docs" / "certs"
 
 
@@ -140,6 +141,35 @@ async def _mcp_flip() -> str:
     return "\n".join(lines)
 
 
+def _sync_hosted_page() -> None:
+    """Rewrite the embedded blocks in docs/index.html from the examples.
+
+    The page used to carry hand-pasted copies, which is why it still showed
+    placeholder certificate URLs long after the code stopped emitting them. A
+    walkthrough that quietly disagrees with the artifacts it claims to show is
+    worse than no walkthrough, so it is generated now.
+    """
+    import html
+
+    page = HOSTED
+    text = page.read_text()
+    for name in (
+        "demo-transcript.txt",
+        "mcp-flip.txt",
+        "published-institutional-memory.json",
+        "ablation.txt",
+        "record-then.json",
+    ):
+        begin, end = f"<!-- begin:{name} -->", f"<!-- end:{name} -->"
+        if begin not in text or end not in text:
+            raise SystemExit(f"{page} is missing the {name} markers")
+        body = html.escape((EXAMPLES / name).read_text().rstrip("\n"))
+        head, _, rest = text.partition(begin)
+        _, _, tail = rest.partition(end)
+        text = f"{head}{begin}\n<pre>{body}</pre>\n{end}{tail}"
+    page.write_text(text)
+
+
 def main() -> int:
     EXAMPLES.mkdir(exist_ok=True)
 
@@ -189,11 +219,17 @@ def main() -> int:
 
     # The demo transcript and the ablation table, captured rather than retyped —
     # a table in the README that nobody regenerated is a table that drifts.
-    (EXAMPLES / "demo-transcript.txt").write_text(_capture(["-m", "dhdr.cli"]))
+    # `--no-publish`: this run is for the transcript. Without it the demo publishes a
+    # second pair of certificates whose artifacts nobody writes, leaving dangling
+    # URLs in institutionalMemory — which is the failure invariant 10 forbids.
+    (EXAMPLES / "demo-transcript.txt").write_text(
+        _capture(["-m", "dhdr.cli", "demo", "--no-publish"])
+    )
     (EXAMPLES / "ablation.txt").write_text(
         _extract_table(_capture(["-m", "pytest", "tests/test_ablation.py", "-s", "-q"]))
     )
 
+    _sync_hosted_page()
     print(f"wrote {len(list(EXAMPLES.iterdir()))} files to {EXAMPLES}")
     return 0
 
