@@ -1,0 +1,79 @@
+{
+  "outcome": "admit",
+  "revision": 339,
+  "aspect_last_observed_ms": 1785862712929,
+  "decided_at_ms": 1785862714737,
+  "capability_class": "C2",
+  "satisfied": true,
+  "missing": [
+    "This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step."
+  ],
+  "certificate": "Capability class: C2\nMissing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.",
+  "record": {
+    "rcdr_version": "0.1",
+    "decision_id": "d-5adf44009a1f",
+    "run_id": "live-before",
+    "sequence": 0,
+    "ts": "2026-08-04T16:58:34.880230+00:00",
+    "outcome": "admit",
+    "action": {
+      "id": "drop_column",
+      "params_digest": "sha256:c6c73e4fe0085d89d9fe84c02fd1fa947c7858a58ae6f6d59f0699a554b4bde2"
+    },
+    "candidates": {
+      "completeness": "exhaustive",
+      "items": [
+        {
+          "action_id": "drop_column",
+          "compared_value": 0,
+          "outcome": "admit",
+          "predicate_id": "p:61706d6af0ed2414"
+        },
+        {
+          "action_id": "deprecate_instead",
+          "compared_value": 0,
+          "outcome": "reject",
+          "predicate_id": "p:61706d6af0ed2414"
+        }
+      ]
+    },
+    "reads": [
+      {
+        "key": "downstream_consumers",
+        "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v339"
+      }
+    ],
+    "writes": [],
+    "execution": {
+      "runtime": "python3.12.3",
+      "deps_digest": "sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2",
+      "path_digest": "sha256:7fc6113230ff8469bc8908c27ae27a40fce1d67723e7449da53ad7e54c589d7d",
+      "seed": null,
+      "clock": null,
+      "pure": true
+    },
+    "capture": {
+      "sdk_version": "0.1.1",
+      "emitter": "dhdr/0.1.0"
+    },
+    "predicate": {
+      "id": "p:61706d6af0ed2414",
+      "operator": "lte",
+      "expression": "downstream_consumers lte max_safe_consumers"
+    },
+    "compared": {
+      "value": 0,
+      "type": "int"
+    },
+    "policy": {
+      "key": "max_safe_consumers",
+      "resolved_value": 0,
+      "resolution": {
+        "provenance": "bundled",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
+        "revision": "339"
+      }
+    }
+  }
+}

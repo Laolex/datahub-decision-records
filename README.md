@@ -152,9 +152,14 @@ the one setting to change.
 See the two decisions for yourself:
 
 ```bash
-python -m dhdr.cli          # just the result
+python -m dhdr.cli demo     # live MCP reads, two decisions, both written back
 python scripts/demo.py      # the same run, paced to be read (or --fast)
 ```
+
+Both go through the real MCP server and publish each certificate into DataHub. There is no time
+travel in that path: MCP only ever answers about *now*, so the world genuinely moves between the
+two reads and the command waits for MCP itself to report the change. `--no-publish` decides and
+certifies without writing back.
 
 ```
 === as the agent saw it ===

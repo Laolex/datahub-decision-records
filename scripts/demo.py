@@ -21,6 +21,7 @@ the real agent reading a real DataHub instance during the recording.
 """
 
 import argparse
+import asyncio
 import sys
 import time
 from pathlib import Path
@@ -28,10 +29,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from reckon import MemorySink, Recorder  # noqa: E402
-
-from dhdr.certify import certify  # noqa: E402
-from dhdr.proxy import CaptureProxy  # noqa: E402
+from dhdr.cli import live_flow, quiet_mcp_logging  # noqa: E402
 
 PACE = 1.0
 
@@ -52,17 +50,127 @@ def rule(title: str) -> None:
     time.sleep(0.8 * PACE)
 
 
-def decide(world, decide_drop_column, at_ms: int, run_id: str):
+async def run() -> int:
+    quiet_mcp_logging()
+
+    rule("the change")
+    say("An engineer proposes dropping a column from a Snowflake table.")
+    say("Before allowing it, an agent checks DataHub: does anything still read from it?")
+    say("Every read goes through DataHub's own MCP server — the live one, not a stub.")
+    beat()
+
+    decisions = []
+    async for kind, payload in live_flow():
+        if kind == "settling":
+            if not payload:
+                say("Setting the world to its starting state on a live instance …", pause=0.2)
+            else:
+                rule("meanwhile, a pipeline changes")
+                say("A dbt model is wired to read from that table. The world moves.")
+                say("Waiting until MCP itself reports the change …", pause=0.2)
+            continue
+
+        decisions.append(payload)
+        if len(decisions) == 1:
+            rule("what the agent decided")
+            say(f"  downstream consumers found: 0")
+            say(f"  decision: {payload.outcome.upper()}")
+            beat()
+            say("The reasoning is legible and it looks correct. The drop goes ahead.")
+            beat()
+
+            rule("three weeks later, a dashboard is broken")
+            say("Someone asks why the agent allowed it. They open the log.")
+            say('It says "no consumers found".')
+            beat()
+            say("But the lineage has moved since. So the log cannot answer the question")
+            say("it is being asked: was that true when the decision was made, or was the")
+            say("agent reading a world that had already changed?")
+            beat(2.0)
+        else:
+            rule("the same call, now")
+            say(f"  downstream consumers found: 1")
+            say(f"  decision: {payload.outcome.upper()}")
+            beat()
+            say("Same agent. Same call, through the same MCP server. Opposite decisions.")
+            beat(2.0)
+
+    before, after = decisions
+
+    rule("what the certificate adds")
+    say("Each decision is bound to the metadata revision that justified it:")
+    print()
+    say(f"  {before.outcome:>6}  ←  aspect revision v{before.revision}"
+        f"   (lastObserved={before.last_observed_ms})")
+    say(f"  {after.outcome:>6}  ←  aspect revision v{after.revision}"
+        f"   (lastObserved={after.last_observed_ms})")
+    print()
+    beat()
+    say("Two different revisions. The record can now name the world it was made in.")
+    say("The MCP response carries no version at all — that coordinate is recovered")
+    say("and matched back to the response by its facts, never by a re-fetch.")
+    beat()
+
+    say("Certificate for the first decision:")
+    print()
+    for line in before.certificate.render().splitlines():
+        say(f"  {line}", pause=0.3)
+    print()
+    say("A capability class, never a percentage — a score over incommensurable")
+    say("kinds of missing evidence manufactures exactly the false confidence")
+    say("this exists to prevent. And note the boundary it declares about its own")
+    say("write: past that point, replay becomes inference.")
+    beat(2.0)
+
+    rule("and when it cannot prove which world")
+    unbound = unbound_refusal()
+    for line in unbound.render().splitlines():
+        say(f"  {line}", pause=0.3)
+    print()
+    say("It refuses. Not 'C2 with a warning' — no class at all. That phrasing is")
+    say("exactly what a hurried reader takes as certification.")
+    beat(2.0)
+
+    rule("where it ends up")
+    say("Both certificates were written back into the dataset's institutionalMemory")
+    say("during this run, so the next agent or engineer inherits them:")
+    print()
+    for d in decisions:
+        say(f"  {d.outcome:>6}  →  {d.published_url}", pause=0.3)
+    print()
+    beat()
+    say("And the same certificate arrives as an annotation on the pull request,")
+    say("where it can still change the outcome.")
+    beat()
+    say("A record nobody keeps certifies nothing.")
+    print()
+    return 0
+
+
+def unbound_refusal():
+    """A real unbound read: ask about an instant before the metadata existed.
+
+    The aspect API is used here rather than MCP because MCP cannot be pointed at
+    a past instant at all — which is the gap this project exists to close. The
+    read is genuine and so is the refusal.
+    """
+    from reckon import MemorySink, Recorder
+
+    from dhdr.certify import certify
+    from dhdr.proxy import CaptureProxy
+    from fixtures.seed import CONSUMER, TARGET
+    from scenarios.schema_ops import decide_drop_column
+
     sink = MemorySink()
     proxy = CaptureProxy()
-    outcome = decide_drop_column(
+    decide_drop_column(
         proxy,
-        Recorder(sink=sink, run_id=run_id, emitter="dhdr/0.1.0"),
-        world.target_urn,
-        world.consumer_urn,
-        at_ms=at_ms,
+        Recorder(sink=sink, run_id="demo-unbound", emitter="dhdr/0.1.0"),
+        TARGET,
+        CONSUMER,
+        at_ms=1,
     )
-    return outcome, sink.records[0], proxy
+    return certify(sink.records[0], proxy.reads, requested="C2")
 
 
 def main() -> int:
@@ -74,95 +182,7 @@ def main() -> int:
     if args.fast:
         PACE = 0.0
 
-    from fixtures.seed import seed_schema_ops
-    from scenarios.schema_ops import decide_drop_column
-
-    rule("the change")
-    say("An engineer proposes dropping a column from a Snowflake table.")
-    say("Before allowing it, an agent checks DataHub: does anything still read from it?")
-    beat()
-
-    say("Setting up the world on a live DataHub instance …", pause=0.2)
-    world = seed_schema_ops()
-    say(f"  target:   {world.target_urn.split(',')[1]}")
-    say(f"  consumer: {world.consumer_urn.split(',')[1]}")
-    beat()
-
-    rule("what the agent decided")
-    outcome_then, record_then, proxy_then = decide(
-        world, decide_drop_column, world.decision_ms, "demo-then"
-    )
-    read_then = proxy_then.reads[0]
-    say(f"  downstream consumers found: {0 if outcome_then == 'admit' else 1}")
-    say(f"  decision: {outcome_then.upper()}")
-    beat()
-    say("The reasoning is legible and it looks correct. The drop goes ahead.")
-    beat()
-
-    rule("three weeks later, a dashboard is broken")
-    say("Someone asks why the agent allowed it. They open the log.")
-    say('It says "no consumers found".')
-    beat()
-    say("But the lineage has moved since. So the log cannot answer the question")
-    say("it is being asked: was that true when the decision was made, or was the")
-    say("agent reading a world that had already changed?")
-    beat(2.0)
-
-    rule("the same call, against the world as it actually was")
-    outcome_now, record_now, proxy_now = decide(
-        world, decide_drop_column, world.after_ms, "demo-now"
-    )
-    read_now = proxy_now.reads[0]
-    say(f"  downstream consumers found: {0 if outcome_now == 'admit' else 1}")
-    say(f"  decision: {outcome_now.upper()}")
-    beat()
-    say("Same agent. Same call. Opposite decisions.")
-    say("A pipeline wired a consumer to that table between the two.")
-    beat(2.0)
-
-    rule("what the certificate adds")
-    say("Each decision is bound to the metadata revision that justified it:")
-    print()
-    say(f"  {outcome_then:>6}  ←  aspect revision v{read_then.revision}"
-        f"   (lastObserved={read_then.last_observed_ms})")
-    say(f"  {outcome_now:>6}  ←  aspect revision v{read_now.revision}"
-        f"   (lastObserved={read_now.last_observed_ms})")
-    print()
-    beat()
-    say("Two different revisions. The record can now name the world it was made in.")
-    beat()
-
-    cert = certify(record_then, proxy_then.reads, requested="C2")
-    say("Certifier output for the first decision:")
-    print()
-    for line in cert.render().splitlines():
-        say(f"  {line}", pause=0.3)
-    print()
-    say("A capability class, never a percentage — a score over incommensurable")
-    say("kinds of missing evidence manufactures exactly the false confidence")
-    say("this exists to prevent.")
-    beat()
-
-    rule("and when it cannot prove which world")
-    _outcome, record_unbound, proxy_unbound = decide(
-        world, decide_drop_column, 1, "demo-unbound"
-    )
-    unbound = certify(record_unbound, proxy_unbound.reads, requested="C2")
-    for line in unbound.render().splitlines():
-        say(f"  {line}", pause=0.3)
-    print()
-    say("It refuses. Not 'C2 with a warning' — no class at all. That phrasing is")
-    say("exactly what a hurried reader takes as certification.")
-    beat(2.0)
-
-    rule("where it ends up")
-    say("The certificate is written back into the dataset's institutionalMemory,")
-    say("so the next agent or engineer inherits it — and it arrives as an")
-    say("annotation on the pull request, where it can still change the outcome.")
-    beat()
-    say("A record nobody keeps certifies nothing.")
-    print()
-    return 0
+    return asyncio.run(run())
 
 
 if __name__ == "__main__":

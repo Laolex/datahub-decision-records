@@ -1,13 +1,17 @@
 
 === as the agent saw it ===
 outcome:  admit
-revision: v139  (lastObserved=1785837820422)
+revision: v343  (lastObserved=1785862730131)
 Capability class: C2
+Missing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.
+published: https://laolex.github.io/datahub-decision-records/certs/1785862736418.json
 
 === as it actually was ===
 outcome:  reject
-revision: v140  (lastObserved=1785837824604)
+revision: v344  (lastObserved=1785862736711)
 Capability class: C2
+Missing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.
+published: https://laolex.github.io/datahub-decision-records/certs/1785862741642.json
 
-Same agent. Same call. Opposite decisions.
+Same agent. Same call, through the real MCP server. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.

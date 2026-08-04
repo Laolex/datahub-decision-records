@@ -23,7 +23,8 @@ from reckon import JsonlSink, MemorySink, Recorder  # noqa: E402
 from dhdr.certify import certify  # noqa: E402
 from dhdr.coordinate import lineage_facts  # noqa: E402
 from dhdr.proxy import CaptureProxy, McpCaptureProxy  # noqa: E402
-from dhdr.publish import publish_certificate, read_published  # noqa: E402
+from dhdr.cli import live_decisions  # noqa: E402
+from dhdr.publish import read_published  # noqa: E402
 from fixtures.seed import (  # noqa: E402
     CONSUMER,
     TARGET,
@@ -33,6 +34,7 @@ from fixtures.seed import (  # noqa: E402
 from scenarios.schema_ops import decide_drop_column, decide_drop_column_mcp  # noqa: E402
 
 EXAMPLES = REPO / "examples"
+CERTS = REPO / "docs" / "certs"
 
 
 def _capture(args: list[str]) -> str:
@@ -149,25 +151,36 @@ def main() -> int:
     record_then, outcome_then, proxy_then = _one_world("then", world.decision_ms, world)
     record_now, outcome_now, proxy_now = _one_world("now", world.after_ms, world)
 
-    # Write-back: what a later reader inherits. The certificate, the outcome and
-    # the revision all come from the decision that was just made — publishing a
-    # different revision than the one that decided is the exact substitution
-    # invariant 7 exists to forbid.
-    events: list[dict] = []
-    for record, outcome, proxy, at_ms in (
-        (record_then, outcome_then, proxy_then, world.decision_ms),
-        (record_now, outcome_now, proxy_now, world.after_ms),
-    ):
-        publish_certificate(
-            world.consumer_urn,
-            certify(record, proxy.reads, requested="C2"),
-            outcome=outcome,
-            revision=proxy.reads[0].revision,
-            decided_at_ms=at_ms,
-            certificate_url=f"https://example.org/certs/{at_ms}.json",
-            events=events,
+    # Write-back, through the live MCP path — the same flow `dhdr demo` runs, so
+    # the committed artifact is what the demo actually produces rather than a
+    # second implementation that could drift from it.
+    #
+    # The certificate artifacts are written into `docs/certs/`, which GitHub
+    # Pages serves, so the URL published into DataHub genuinely resolves for a
+    # later reader. Invariant 10 asks for exactly that, and a placeholder domain
+    # would satisfy the `https://` check while resolving for nobody.
+    decisions = asyncio.run(live_decisions())
+    CERTS.mkdir(parents=True, exist_ok=True)
+    for decision in decisions:
+        (CERTS / f"{decision.decided_at_ms}.json").write_text(
+            json.dumps(
+                {
+                    "outcome": decision.outcome,
+                    "revision": decision.revision,
+                    "aspect_last_observed_ms": decision.last_observed_ms,
+                    "decided_at_ms": decision.decided_at_ms,
+                    "capability_class": decision.certificate.cls,
+                    "satisfied": decision.certificate.satisfied,
+                    "missing": decision.certificate.missing,
+                    "certificate": decision.certificate.render(),
+                    "record": decision.record,
+                },
+                indent=2,
+                default=str,
+            )
+            + "\n"
         )
-    published = read_published(world.consumer_urn)
+    published = read_published(CONSUMER)
     (EXAMPLES / "published-institutional-memory.json").write_text(
         json.dumps(published, indent=2) + "\n"
     )
