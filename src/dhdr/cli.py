@@ -310,7 +310,9 @@ def _demo(args: argparse.Namespace) -> int:
     cert_base = getattr(args, "cert_base", DEFAULT_CERT_BASE)
 
     decisions = asyncio.run(
-        live_decisions(cert_base=cert_base, publish=publish, reset=args.reset)
+        live_decisions(
+            cert_base=cert_base, publish=publish, reset=getattr(args, "reset", False)
+        )
     )
 
     for label, decision in zip(
