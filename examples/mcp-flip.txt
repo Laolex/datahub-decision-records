@@ -2,14 +2,14 @@
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      admit
-revision:     v401
+revision:     v463
 Capability class: C2
 
 === consumer wired up ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      reject
-revision:     v402
+revision:     v464
 Capability class: C2
 
 The agent made the identical MCP call both times.

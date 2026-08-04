@@ -1,8 +1,8 @@
 {
   "outcome": "reject",
-  "revision": 400,
-  "aspect_last_observed_ms": 1785866118058,
-  "decided_at_ms": 1785866123004,
+  "revision": 462,
+  "aspect_last_observed_ms": 1785882296249,
+  "decided_at_ms": 1785882301289,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [
@@ -11,10 +11,10 @@
   "certificate": "Capability class: C2\nMissing: This agent published its own certificate to institutionalMemory. That write is state a later decision may read, so replay past this point is counterfactual inference, not replay. Deductive evidence ends at the publish step.",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-6c39da8b4d4a",
+    "decision_id": "d-70618c3ab637",
     "run_id": "live-after",
     "sequence": 0,
-    "ts": "2026-08-04T17:55:23.183298+00:00",
+    "ts": "2026-08-04T22:25:01.456069+00:00",
     "outcome": "reject",
     "action": {
       "id": "drop_column",
@@ -41,7 +41,7 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v400"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v462"
       }
     ],
     "writes": [],
@@ -72,7 +72,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "400"
+        "revision": "462"
       }
     }
   }

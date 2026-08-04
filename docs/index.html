@@ -72,7 +72,7 @@ it was made against.</p>
 <pre>
 === as the agent saw it ===
 outcome:  admit
-revision: v403  (lastObserved=1785866134577)
+revision: v465  (lastObserved=1785882311714)
 Capability class: C2
 proposed change:
   -- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.
@@ -81,7 +81,7 @@ proposed change:
 
 === as it actually was ===
 outcome:  reject
-revision: v404  (lastObserved=1785866142450)
+revision: v466  (lastObserved=1785882313448)
 Capability class: C2
 proposed change:
   -- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.
@@ -106,14 +106,14 @@ the world is moved between two live reads instead.</p>
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      admit
-revision:     v401
+revision:     v463
 Capability class: C2
 
 === consumer wired up ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      reject
-revision:     v402
+revision:     v464
 Capability class: C2
 
 The agent made the identical MCP call both times.
@@ -136,18 +136,18 @@ rerunning anything.</p>
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785866117870
+        &quot;time&quot;: 1785882296041
       },
-      &quot;description&quot;: &quot;decision=admit against v399 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785866117870.json&quot;
+      &quot;description&quot;: &quot;decision=admit against v461 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785882296041.json&quot;
     },
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785866123004
+        &quot;time&quot;: 1785882301289
       },
-      &quot;description&quot;: &quot;decision=reject against v400 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785866123004.json&quot;
+      &quot;description&quot;: &quot;decision=reject against v462 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785882301289.json&quot;
     }
   ]
 }</pre>
@@ -217,7 +217,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;type&quot;: &quot;int&quot;,
     &quot;value&quot;: 0
   },
-  &quot;decision_id&quot;: &quot;d-d5623b51244a&quot;,
+  &quot;decision_id&quot;: &quot;d-12e456e46448&quot;,
   &quot;execution&quot;: {
     &quot;clock&quot;: null,
     &quot;deps_digest&quot;: &quot;sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2&quot;,
@@ -231,7 +231,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;key&quot;: &quot;max_safe_consumers&quot;,
     &quot;resolution&quot;: {
       &quot;provenance&quot;: &quot;bundled&quot;,
-      &quot;revision&quot;: &quot;397&quot;,
+      &quot;revision&quot;: &quot;459&quot;,
       &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage&quot;
     },
     &quot;resolved_value&quot;: 0
@@ -245,13 +245,13 @@ the annotation. Both results are pinned by tests.</p>
   &quot;reads&quot;: [
     {
       &quot;key&quot;: &quot;downstream_consumers&quot;,
-      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v397&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v459&quot;,
       &quot;value_digest&quot;: &quot;sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9&quot;
     }
   ],
   &quot;run_id&quot;: &quot;example-then&quot;,
   &quot;sequence&quot;: 0,
-  &quot;ts&quot;: &quot;2026-08-04T17:55:10.248067+00:00&quot;,
+  &quot;ts&quot;: &quot;2026-08-04T22:24:54.133585+00:00&quot;,
   &quot;writes&quot;: []
 }</pre>
 <!-- end:record-then.json -->

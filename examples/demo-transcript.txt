@@ -1,7 +1,7 @@
 
 === as the agent saw it ===
 outcome:  admit
-revision: v403  (lastObserved=1785866134577)
+revision: v465  (lastObserved=1785882311714)
 Capability class: C2
 proposed change:
   -- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.
@@ -10,7 +10,7 @@ proposed change:
 
 === as it actually was ===
 outcome:  reject
-revision: v404  (lastObserved=1785866142450)
+revision: v466  (lastObserved=1785882313448)
 Capability class: C2
 proposed change:
   -- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.
