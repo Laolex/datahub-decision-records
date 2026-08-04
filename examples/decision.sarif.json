@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "dhdr",
+          "informationUri": "https://github.com/Laolex/datahub-decision-records",
+          "rules": [
+            {
+              "id": "dhdr/decision-certified",
+              "name": "DecisionCertified",
+              "shortDescription": {
+                "text": "Agent decision bound to a metadata revision"
+              },
+              "fullDescription": {
+                "text": "Every context read behind this decision was bound to the DataHub aspect revision in force when the read happened. The level reflects the capability class, which is ordinal and is never a score."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "dhdr/decision-unsound",
+              "name": "DecisionUnsound",
+              "shortDescription": {
+                "text": "Agent decision could not be bound to a revision"
+              },
+              "fullDescription": {
+                "text": "At least one deciding read could not be tied to an aspect revision, so no capability class is certifiable \u2014 the record cannot name the world it was made in. Reported at warning by default so a gap in instrumentation does not block a merge; run strict to fail the build instead."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "dhdr/decision-certified",
+          "level": "warning",
+          "message": {
+            "text": "Capability class: C2"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "pipelines/orders.sql"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

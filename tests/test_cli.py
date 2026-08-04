@@ -13,7 +13,7 @@ sys.path.insert(0, str(REPO))
 def test_demo_shows_the_same_call_deciding_both_ways(capsys):
     from dhdr.cli import main
 
-    assert main() == 0
+    assert main([]) == 0
     out = capsys.readouterr().out
 
     assert "admit" in out
@@ -24,6 +24,25 @@ def test_demo_shows_the_same_call_deciding_both_ways(capsys):
     assert revisions[0] != revisions[1]
     assert "Capability class: C2" in out
     assert "%" not in out
+
+
+@pytest.mark.integration
+def test_sarif_subcommand_emits_an_ingestible_document(capsys):
+    """The CI gate has to be reachable from a shell, not just importable."""
+    import json
+
+    from dhdr.cli import main
+
+    assert main(["sarif", "--path", "pipelines/orders.sql"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+
+    assert doc["version"] == "2.1.0"
+    result = doc["runs"][0]["results"][0]
+    assert result["level"] in {"note", "warning", "error"}
+    assert (
+        result["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+        == "pipelines/orders.sql"
+    )
 
 
 @pytest.mark.integration

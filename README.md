@@ -125,7 +125,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-35 tests currently pass. The ones worth knowing about:
+42 tests currently pass. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
@@ -139,6 +139,33 @@ Note that the flip test needs GMS's lineage cache disabled
 (`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`). With the shipped default a lineage change reaches the
 graph index in seconds but stays invisible to `get_lineage` for hours, and the test times out
 rather than passing on stale context.
+
+## As a CI gate, not only a CLI
+
+A certificate printed by a CLI is read once, by the person who ran it. A certificate that arrives
+as an annotation on a pull request is read by whoever is about to merge — the moment it can still
+change something. That is the second design law doing work: *a record nobody keeps certifies
+nothing.*
+
+```bash
+python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
+```
+
+The output is SARIF 2.1.0 ([`examples/decision.sarif.json`](examples/decision.sarif.json)), which
+any code host ingests. SARIF's `level` is ordinal — `none`, `note`, `warning`, `error` — so the
+capability classes map onto it directly and nobody has to invent a percentage on the way:
+
+| class | level |
+|---|---|
+| C0, C1 | `note` |
+| C2 | `warning` |
+| C3 | `error` |
+| unsound (any unbound read) | `warning`, or `error` under `--strict` |
+
+Note that last row. **Unsoundness fails open by default.** A gate that blocks a merge because of
+a gap in its own instrumentation gets uninstalled inside a week, and an uninstalled gate
+certifies nothing at all. `--strict` fails closed for teams that have decided they want that, and
+only then does the command exit non-zero.
 
 ## Ablation
 
