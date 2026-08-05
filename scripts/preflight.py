@@ -22,6 +22,19 @@ sys.path.insert(0, "/opt/datahub-decision-records")
 # debugging the adapter, actively unhelpful in a preflight whose entire job is
 # to print one clear line about what is wrong.
 logging.disable(logging.INFO)
+
+# The DataHub SDK's ExperimentalWarning goes straight to stderr on import and
+# would otherwise land in the middle of a preflight whose whole job is to print
+# one clear line.
+import warnings  # noqa: E402
+
+try:
+    from datahub.errors import ExperimentalWarning
+
+    warnings.filterwarnings("ignore", category=ExperimentalWarning)
+except ImportError:
+    warnings.filterwarnings("ignore", message=r".*[Ee]xperimental.*")
+
 try:
     from loguru import logger as _loguru_logger
 

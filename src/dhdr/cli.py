@@ -44,8 +44,20 @@ def quiet_mcp_logging() -> None:
     debugging the adapter and drowns the certificate when a human is reading.
     """
     import logging
+    import warnings
 
     logging.disable(logging.INFO)
+
+    # The DataHub SDK emits an ExperimentalWarning on import, twice, straight to
+    # stderr — harmless, theirs not ours, and it lands in the middle of the
+    # output a human is reading.
+    try:
+        from datahub.errors import ExperimentalWarning
+
+        warnings.filterwarnings("ignore", category=ExperimentalWarning)
+    except ImportError:  # pragma: no cover - SDK always present in practice
+        warnings.filterwarnings("ignore", message=r".*[Ee]xperimental.*")
+
     try:
         from loguru import logger
 

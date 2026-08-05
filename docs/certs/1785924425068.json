@@ -1,0 +1,78 @@
+{
+  "outcome": "admit",
+  "revision": 765,
+  "aspect_last_observed_ms": 1785924417321,
+  "decided_at_ms": 1785924425068,
+  "capability_class": "C2",
+  "satisfied": true,
+  "missing": [],
+  "certificate": "Capability class: C2",
+  "proposed_change": "-- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.\n-- proposed \u2014 not applied by dhdr\nALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;",
+  "record": {
+    "rcdr_version": "0.1",
+    "decision_id": "d-bb65b2ff7309",
+    "run_id": "live-before",
+    "sequence": 0,
+    "ts": "2026-08-05T10:07:05.188578+00:00",
+    "outcome": "admit",
+    "action": {
+      "id": "drop_column",
+      "params_digest": "sha256:58095b73555a42fb25a5cbf38433230df8fb76be6801dcf96bb54a609f3f37d2"
+    },
+    "candidates": {
+      "completeness": "exhaustive",
+      "items": [
+        {
+          "action_id": "drop_column",
+          "compared_value": 0,
+          "outcome": "admit",
+          "predicate_id": "p:61706d6af0ed2414"
+        },
+        {
+          "action_id": "deprecate_instead",
+          "compared_value": 0,
+          "outcome": "reject",
+          "predicate_id": "p:61706d6af0ed2414"
+        }
+      ]
+    },
+    "reads": [
+      {
+        "key": "downstream_consumers",
+        "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v765"
+      }
+    ],
+    "writes": [],
+    "execution": {
+      "runtime": "python3.12.3",
+      "deps_digest": "sha256:8a9832fd1f3f58eef7d8e79bd04a58388087a78f4ff2611c8cae674324f995b9",
+      "path_digest": "sha256:dcd90d9ffa838fbbf522dcbb2f18b2aca20248f61902e5de62bea2c30162010a",
+      "seed": null,
+      "clock": null,
+      "pure": true
+    },
+    "capture": {
+      "sdk_version": "0.1.1",
+      "emitter": "dhdr/0.1.0"
+    },
+    "predicate": {
+      "id": "p:61706d6af0ed2414",
+      "operator": "lte",
+      "expression": "downstream_consumers lte max_safe_consumers"
+    },
+    "compared": {
+      "value": 0,
+      "type": "int"
+    },
+    "policy": {
+      "key": "max_safe_consumers",
+      "resolved_value": 0,
+      "resolution": {
+        "provenance": "bundled",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
+        "revision": "765"
+      }
+    }
+  }
+}
