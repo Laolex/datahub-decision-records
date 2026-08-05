@@ -28,7 +28,7 @@
     "type": "int",
     "value": 0
   },
-  "decision_id": "d-ee0ab060bd35",
+  "decision_id": "d-efe503ef08e3",
   "execution": {
     "clock": null,
     "deps_digest": "sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2",
@@ -42,7 +42,7 @@
     "key": "max_safe_consumers",
     "resolution": {
       "provenance": "bundled",
-      "revision": "547",
+      "revision": "655",
       "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage"
     },
     "resolved_value": 0
@@ -56,12 +56,12 @@
   "reads": [
     {
       "key": "downstream_consumers",
-      "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v547",
+      "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v655",
       "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
     }
   ],
   "run_id": "example-then",
   "sequence": 0,
-  "ts": "2026-08-04T23:24:46.415034+00:00",
+  "ts": "2026-08-05T07:30:50.363359+00:00",
   "writes": []
 }

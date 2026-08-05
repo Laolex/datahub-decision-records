@@ -54,3 +54,34 @@ def test_the_unsound_result_says_unsound_in_the_message():
 def test_c3_boundary_reaches_the_annotation():
     cert = Certificate("C2", False, c3_boundary="evidence ends here")
     assert "evidence ends here" in _result(cert)["message"]["text"]
+
+
+def test_annotation_carries_what_a_reviewer_needs_to_act():
+    """`Capability class: C2` alone tells a reviewer nothing actionable.
+
+    The annotation lands on a pull request, where the reader has the diff and
+    nothing else. It has to say which decision, about which dataset, against
+    which revision — otherwise it is a grade with no subject.
+    """
+    doc = to_sarif(
+        Certificate("C2", True),
+        path="pipelines/orders.sql",
+        outcome="reject",
+        revision=462,
+        dataset="urn:li:dataset:(urn:li:dataPlatform:snowflake,orders,PROD)",
+        change="COMMENT ON COLUMN orders.promo_code IS 'deprecated';",
+    )
+    text = doc["runs"][0]["results"][0]["message"]["text"]
+    assert "reject" in text
+    assert "v462" in text
+    assert "orders" in text
+    assert "COMMENT ON COLUMN" in text
+    assert "Capability class: C2" in text
+
+
+def test_annotation_without_context_is_unchanged():
+    """The context is optional; omitting it must not change the old output."""
+    text = to_sarif(Certificate("C2", True), path="a.py")["runs"][0]["results"][0][
+        "message"
+    ]["text"]
+    assert text == Certificate("C2", True).render()

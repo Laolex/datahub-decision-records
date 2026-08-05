@@ -337,8 +337,22 @@ def _sarif(args: argparse.Namespace) -> int:
     """
     quiet_mcp_logging()
     decisions = asyncio.run(live_decisions(publish=False))
-    cert = decisions[-1].certificate
-    json.dump(to_sarif(cert, path=args.path, strict=args.strict), sys.stdout, indent=2)
+    decision = decisions[-1]
+    cert = decision.certificate
+    consumer, _target, _set_lineage, _decide = _load_live()
+    json.dump(
+        to_sarif(
+            cert,
+            path=args.path,
+            strict=args.strict,
+            outcome=decision.outcome,
+            revision=decision.revision,
+            dataset=consumer,
+            change=decision.change.statement if decision.change else None,
+        ),
+        sys.stdout,
+        indent=2,
+    )
     print()
     # Exit non-zero only under --strict, and only when nothing is certifiable.
     # A gate that blocks a merge over a gap in its own instrumentation gets

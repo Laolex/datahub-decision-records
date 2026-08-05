@@ -1,37 +1,37 @@
 {
-  "outcome": "reject",
-  "revision": 622,
-  "aspect_last_observed_ms": 1785914709600,
-  "decided_at_ms": 1785914714472,
+  "outcome": "admit",
+  "revision": 671,
+  "aspect_last_observed_ms": 1785915110973,
+  "decided_at_ms": 1785915113453,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [],
   "certificate": "Capability class: C2",
-  "proposed_change": "-- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.\n-- proposed \u2014 not applied by dhdr\nCOMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';",
+  "proposed_change": "-- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.\n-- proposed \u2014 not applied by dhdr\nALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-fad7fe84af8c",
-    "run_id": "live-after",
+    "decision_id": "d-9cc5715c5592",
+    "run_id": "live-before",
     "sequence": 0,
-    "ts": "2026-08-05T07:25:14.580334+00:00",
-    "outcome": "reject",
+    "ts": "2026-08-05T07:31:53.563454+00:00",
+    "outcome": "admit",
     "action": {
       "id": "drop_column",
-      "params_digest": "sha256:c5036a0dfef7f44c0970f03a8fae903ec7780b36544ca475fe79bf4c71931b60"
+      "params_digest": "sha256:58095b73555a42fb25a5cbf38433230df8fb76be6801dcf96bb54a609f3f37d2"
     },
     "candidates": {
       "completeness": "exhaustive",
       "items": [
         {
           "action_id": "drop_column",
-          "compared_value": 1,
-          "outcome": "reject",
+          "compared_value": 0,
+          "outcome": "admit",
           "predicate_id": "p:61706d6af0ed2414"
         },
         {
           "action_id": "deprecate_instead",
-          "compared_value": 1,
-          "outcome": "admit",
+          "compared_value": 0,
+          "outcome": "reject",
           "predicate_id": "p:61706d6af0ed2414"
         }
       ]
@@ -39,8 +39,8 @@
     "reads": [
       {
         "key": "downstream_consumers",
-        "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v622"
+        "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v671"
       }
     ],
     "writes": [],
@@ -62,7 +62,7 @@
       "expression": "downstream_consumers lte max_safe_consumers"
     },
     "compared": {
-      "value": 1,
+      "value": 0,
       "type": "int"
     },
     "policy": {
@@ -71,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "622"
+        "revision": "671"
       }
     }
   }

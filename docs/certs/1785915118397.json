@@ -1,8 +1,8 @@
 {
   "outcome": "reject",
-  "revision": 580,
-  "aspect_last_observed_ms": 1785914193469,
-  "decided_at_ms": 1785914196608,
+  "revision": 672,
+  "aspect_last_observed_ms": 1785915113708,
+  "decided_at_ms": 1785915118397,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [],
@@ -10,10 +10,10 @@
   "proposed_change": "-- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.\n-- proposed \u2014 not applied by dhdr\nCOMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-4bec4af2e327",
+    "decision_id": "d-0a3131d3dbae",
     "run_id": "live-after",
     "sequence": 0,
-    "ts": "2026-08-05T07:16:36.836261+00:00",
+    "ts": "2026-08-05T07:31:58.483550+00:00",
     "outcome": "reject",
     "action": {
       "id": "drop_column",
@@ -40,7 +40,7 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v580"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v672"
       }
     ],
     "writes": [],
@@ -71,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "580"
+        "revision": "672"
       }
     }
   }

@@ -55,8 +55,49 @@ RULES = [
 ]
 
 
-def to_sarif(cert: Certificate, *, path: str, strict: bool = False) -> dict:
-    """Render one certificate as a SARIF 2.1.0 document."""
+def _message(
+    cert: Certificate,
+    outcome: str | None,
+    revision: int | None,
+    dataset: str | None,
+    change: str | None,
+) -> str:
+    """The certificate, led by the decision it is about when that is known."""
+    if outcome is None and revision is None and dataset is None and change is None:
+        return cert.render()
+
+    head = []
+    if outcome is not None:
+        table = dataset.split(",")[1] if dataset and "," in dataset else dataset
+        against = f" against {table}" if table else ""
+        at = f" at revision v{revision}" if revision is not None else ""
+        head.append(f"Decision: {outcome}{against}{at}")
+    elif revision is not None:
+        head.append(f"Revision: v{revision}")
+    if change:
+        head.append(f"Proposed: {change}")
+
+    return "\n".join([*head, "", cert.render()])
+
+
+def to_sarif(
+    cert: Certificate,
+    *,
+    path: str,
+    strict: bool = False,
+    outcome: str | None = None,
+    revision: int | None = None,
+    dataset: str | None = None,
+    change: str | None = None,
+) -> dict:
+    """Render one certificate as a SARIF 2.1.0 document.
+
+    The optional decision context is what makes the annotation actionable. A
+    reader on a pull request has the diff and nothing else; a bare capability
+    class is a grade with no subject. When supplied, the message leads with what
+    was decided, about which dataset, against which revision, and the change
+    being proposed.
+    """
     unsound = cert.cls is None or bool(cert.unbound_reads)
 
     if unsound:
@@ -86,7 +127,7 @@ def to_sarif(cert: Certificate, *, path: str, strict: bool = False) -> dict:
                         # with the class or with UNSOUND, and carries the C3
                         # boundary and every missing item — which is exactly what a
                         # reviewer needs in the one line a code host shows them.
-                        "message": {"text": cert.render()},
+                        "message": {"text": _message(cert, outcome, revision, dataset, change)},
                         "locations": [
                             {
                                 "physicalLocation": {
