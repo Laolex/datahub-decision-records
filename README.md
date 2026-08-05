@@ -254,12 +254,27 @@ the annotation.
 
 ## Running the tests
 
-Requires a live DataHub Core instance at `localhost:8080` for the integration tests.
+Requires a live DataHub Core instance for the integration tests. `DATAHUB_GMS_URL` says where it
+is — the same variable the DataHub SDK and MCP server read — and defaults to `localhost:8080`.
+Every entry point honours it, and `dhdr --base-url` overrides it for one run.
 
 ```bash
 pip install -e '.[dev]'
 python scripts/preflight.py      # check the instance can demonstrate the flip
 DATAHUB_GMS_URL=http://localhost:8080 python -m pytest -v
+```
+
+The integration tests skip unless DataHub both identifies itself *and* answers a search query.
+A stack whose Elasticsearch/OpenSearch container is down still serves `/config` and still reports
+its other containers healthy, so a check that trusted `/config` alone would un-skip the
+integration tests against a half-working instance and fail in a way that looks like this project
+is broken. It is not; the skip reason will say so.
+
+The refusal has its own gate, which needs no DataHub and is the fastest way to see what the
+project actually claims:
+
+```bash
+python scripts/negative_control.py    # exits non-zero if the refusal stops holding
 ```
 
 Run the preflight first. A stock DataHub quickstart serves lineage from a cache whose default
@@ -295,7 +310,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-54 tests currently pass. The ones worth knowing about:
+65 tests: 33 run with no DataHub at all, 32 need a live instance. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
@@ -413,7 +428,14 @@ python scripts/generate_examples.py
 
 ### The world
 
-Verified against **DataHub Core v1.5.0.6**, `mcp-server-datahub` 0.6.0, `acryl-datahub` 1.6.0.17.
+The live end-to-end run — two decisions, real MCP reads, certificates written back — was
+performed against **DataHub Core v1.5.0.6**, `mcp-server-datahub` 0.6.0, `acryl-datahub` 1.6.0.17.
+That is the combination the transcripts and published certificates in `examples/` came from.
+
+The dependency floor in `pyproject.toml` is deliberately a floor, not a pin, so a fresh install
+today resolves `acryl-datahub` 1.7.0 instead. The 33 no-DataHub tests and the negative control
+pass on both. What has *not* been re-run end-to-end against 1.7.0 is the live MCP path, because
+that needs an instance; if you have one and it behaves differently, that is worth an issue.
 
 The scenario decides over real datasets from DataHub's own `showcase-ecommerce` datapack, not
 invented URNs — MCP resolves upstreams that exist *as entities*, so a fabricated URN produces a

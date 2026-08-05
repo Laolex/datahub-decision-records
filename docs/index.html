@@ -44,20 +44,71 @@ li { margin-bottom: .4rem; }
 <main>
 
 <h1>Decision records for DataHub agents</h1>
-<p class="lede">An agent that decides from DataHub context &mdash; and can prove which version of
-that context justified each decision.</p>
+<p class="lede">An agent leaves a note saying it was safe to delete a column. Months later the
+note is still there, and nobody can tell whether it was ever true.</p>
 
-<p>Reading metadata to decide something is the easy half. The hard half arrives later, when
-someone asks why the agent allowed a column drop that broke a dashboard. The lineage has moved
-since. The log says <em>no consumers found</em>, and nothing in it says whether that was true at
-the time or merely true of a stale read.</p>
+<p>The note said <em>nothing was using this table</em>. But what a company knows about its own
+data changes constantly &mdash; something may have started using that table an hour before the
+agent looked, or an hour after. <strong>The note doesn't say which version of the world it was
+describing.</strong> So nobody can tell whether the agent was wrong, or whether it was right
+about a world that had already moved.</p>
+
+<p>That is the whole problem this project fixes. Every time the agent looks something up, we
+record <em>exactly which version</em> of the company's records it saw &mdash; not just what it
+saw. The note now reads &ldquo;nothing was using it, according to version 461, recorded at
+22:24:56&rdquo;, and the question is answerable. And when we <em>cannot</em> establish which
+version the agent saw, we say so and refuse to vouch for the decision, rather than issuing a
+clean-looking approval.</p>
 
 <div class="law">A record that cannot name the revision it was made against is not a record of a
 decision.</div>
 
+<div class="note">
+<p style="margin:0 0 .5rem"><strong>Start here</strong></p>
+<ul style="margin:0">
+<li><a href="https://github.com/Laolex/datahub-decision-records">The repository</a> &mdash;
+source, tests, and the full README.</li>
+<li><a href="https://github.com/Laolex/datahub-decision-records#running-the-tests">Run it
+yourself</a> &mdash; <code>pip install -e '.[dev]'</code> then <code>pytest -q</code>. 33 of the
+65 tests need no DataHub at all.</li>
+<li><a href="https://github.com/Laolex/datahub-decision-records/blob/main/scripts/negative_control.py">The
+negative control</a> &mdash; one command, no DataHub, exits non-zero if the refusal stops holding.
+The fastest way to check this page's claim instead of taking it.</li>
+<li><a href="https://github.com/Laolex/datahub-decision-records/tree/main/examples">Recorded
+output</a> &mdash; transcripts and certificates from the live run, not mock-ups.</li>
+</ul>
+</div>
+
 <p class="meta">Built for Build with DataHub &mdash; The Agent Hackathon, track <em>Agents That
-Do Real Work</em>. Source, tests and full README:
-<a href="https://github.com/Laolex/datahub-decision-records">github.com/Laolex/datahub-decision-records</a></p>
+Do Real Work</em>.</p>
+
+<hr>
+
+<h2>The words this page uses</h2>
+
+<p>DataHub vocabulary in one place, so nothing below depends on knowing it already.</p>
+
+<ul>
+<li><strong>DataHub</strong> &mdash; an open-source catalogue of what data a company has, where it
+came from, and who owns it.</li>
+<li><strong>Aspect</strong> &mdash; one named piece of what DataHub knows about a thing: its
+lineage, its owners, its documentation. Each aspect is versioned independently.</li>
+<li><strong>Revision</strong> &mdash; one numbered version of an aspect. Version 0 means
+&ldquo;whatever is current&rdquo;; 1&hellip;N are the archived versions, 1 being the oldest. This
+is the coordinate the whole project turns on.</li>
+<li><strong>Lineage</strong> &mdash; which datasets feed which. &ldquo;Nothing reads from this
+table&rdquo; is a lineage claim.</li>
+<li><strong>URN</strong> &mdash; DataHub's unique identifier for a thing, such as
+<code>urn:li:dataset:(urn:li:dataPlatform:snowflake,&hellip;)</code>.</li>
+<li><strong>MCP</strong> &mdash; Model Context Protocol, the standard interface an AI agent uses
+to call tools. The agent here reads DataHub through DataHub's own MCP server rather than a
+private back door, which is why the gap it runs into is a real one.</li>
+<li><strong>institutionalMemory</strong> &mdash; the DataHub aspect holding links and notes
+attached to a dataset. Certificates are written back here, so they show up in the product's own
+Documentation tab.</li>
+<li><strong>Capability class (C0&ndash;C3)</strong> &mdash; how much a record can actually
+support, reported as a class rather than a percentage. Defined in full further down.</li>
+</ul>
 
 <hr>
 
