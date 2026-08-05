@@ -27,7 +27,7 @@ our record can tell you which world each was made in.
 
 ---
 
-**The same thing, for a data engineer.** An agent that makes schema, access and triage decisions
+**The same thing, for a data engineer.** An agent that makes schema and access decisions
 from DataHub context — lineage, ownership, glossary terms — and can prove **which version of that
 context justified each decision**.
 
