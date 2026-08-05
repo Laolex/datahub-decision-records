@@ -209,6 +209,14 @@ def main() -> int:
     (EXAMPLES / "demo-transcript.txt").write_text(
         _capture(["-m", "dhdr.cli", "demo", "--no-publish"])
     )
+    # The SARIF the CI gate uploads. Regenerated here rather than hand-kept: it
+    # was committed once and then silently went stale when the annotation grew
+    # to name the decision, so the README described an artifact that no longer
+    # matched the one on the pull request.
+    (EXAMPLES / "decision.sarif.json").write_text(
+        _capture(["-m", "dhdr.cli", "sarif", "--path", "pipelines/orders.sql"])
+    )
+
     (EXAMPLES / "ablation.txt").write_text(
         _extract_table(_capture(["-m", "pytest", "tests/test_ablation.py", "-s", "-q"]))
     )
