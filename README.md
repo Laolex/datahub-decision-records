@@ -1,8 +1,35 @@
 # dhdr — decision records for DataHub agents
 
-An agent that makes schema, access and triage decisions from DataHub context — lineage,
-ownership, glossary terms — and can prove **which version of that context justified each
-decision**.
+**In plain terms, before any jargon.**
+
+A company's data lives in thousands of tables. Some of those tables feed dashboards that people
+make decisions from. An engineer wants to delete a column from one of them, and needs to know
+first: is anything still using it?
+
+An AI agent can answer that. It looks up what depends on the table, finds nothing, and says the
+deletion is safe. It writes down its reasoning. So far so good.
+
+Three weeks later a dashboard is broken and someone asks why the agent allowed it. They open the
+note the agent wrote. It says *"nothing was using it."* But the answer to that question changes
+over time — something may have started using the table an hour before the agent looked, or an
+hour after. **The note doesn't say which version of the world it was describing.** So nobody can
+tell whether the agent was wrong, or whether it was right about a world that had already changed.
+
+That is the whole problem this project fixes. Every time the agent looks something up, we record
+*exactly which version* of the company's records it saw — not just what it saw. Now the note
+reads "nothing was using it, according to version 461, recorded at 22:24:56", and the question is
+answerable. And when we can't establish which version the agent saw, we say so and refuse to
+vouch for the decision, rather than issuing a clean-looking approval.
+
+The demo shows one agent making the identical request twice, seconds apart, while someone changes
+a data pipeline in between — and reaching opposite conclusions. The two notes look the same. Only
+our record can tell you which world each was made in.
+
+---
+
+**The same thing, for a data engineer.** An agent that makes schema, access and triage decisions
+from DataHub context — lineage, ownership, glossary terms — and can prove **which version of that
+context justified each decision**.
 
 Reading metadata to decide something is the easy half. The hard half arrives later, when
 someone asks why the agent allowed a column drop that broke a dashboard. The lineage has
