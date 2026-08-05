@@ -195,6 +195,37 @@ adding anything new to the platform.
 
 That is the reason the provenance layer had to exist, not the pitch. The pitch is the agent.
 
+### What changes if the version coordinate ships upstream
+
+Worth stating plainly, because a thesis that depends on a gap staying open is a fragile one, and
+[#181](https://github.com/acryldata/mcp-server-datahub/issues/181) is a request for that gap to
+close.
+
+**Almost all of this survives, and the part that goes away is the part we would most like to
+lose.** If `get_lineage` grew an `as_of` parameter tomorrow — or merely echoed
+`systemMetadata.version` in its response — the *acquisition* of the coordinate would get simpler
+and better: the fact-matching in `coordinate.py` exists only because the response cannot date
+itself, and a read that carries its own version needs no matching at all. That is a workaround
+retiring, which is what a workaround is for.
+
+What does not change is everything downstream of having the coordinate: binding it to the
+decision, refusing to certify when it cannot be bound, reporting a capability class rather than a
+percentage, declaring the C3 boundary where the agent's own write couples it to future state, and
+publishing the certificate somewhere the next reader inherits it. None of that follows from the
+gap. It follows from the design law — *a record that cannot name the revision it was made against
+is not a record of a decision* — which is true of any agent reading any versioned metadata,
+including one whose platform hands it the version for free.
+
+Two things get *easier* rather than harder in that world. The race this design has to guard
+against — metadata moving between the agent's read and the resolver's — disappears, because the
+coordinate arrives with the response instead of being recovered afterwards. And the honest
+`unbound` outcome becomes rare rather than routine.
+
+So the right reading if the parameter ships is **validation, not obsolescence**: the platform
+agreed the coordinate belongs on the agent's surface. The workaround was always the cost of it not
+being there yet, and the ablation already reports which half was load-bearing — the refusal, not
+the annotation.
+
 ## Running the tests
 
 Requires a live DataHub Core instance at `localhost:8080` for the integration tests.
