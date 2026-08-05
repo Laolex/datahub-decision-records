@@ -14,7 +14,7 @@ and is passed in rather than hardcoded here.
 import time
 from dataclasses import dataclass, field
 
-from .coordinate import DEFAULT_BASE_URL, bind_revision, read_aspect, resolve_at
+from .coordinate import bind_revision, default_base_url, read_aspect, resolve_at
 
 
 @dataclass
@@ -39,7 +39,7 @@ class CapturedRead:
 
 @dataclass
 class CaptureProxy:
-    base_url: str = DEFAULT_BASE_URL
+    base_url: str = field(default_factory=default_base_url)
     reads: list[CapturedRead] = field(default_factory=list)
 
     def call(
@@ -96,8 +96,8 @@ class McpCaptureProxy(CaptureProxy):
     function and calling it directly would bypass MCP entirely.
     """
 
-    def __init__(self, base_url: str = DEFAULT_BASE_URL) -> None:
-        super().__init__(base_url=base_url)
+    def __init__(self, base_url: str | None = None) -> None:
+        super().__init__(base_url=base_url or default_base_url())
         self._client = None
         self._ctx = None
 

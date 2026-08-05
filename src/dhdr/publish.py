@@ -37,7 +37,7 @@ import urllib.parse
 import requests
 
 from .certify import Certificate
-from .coordinate import DEFAULT_BASE_URL
+from .coordinate import default_base_url
 
 ACTOR = "urn:li:corpuser:datahub"
 MAX_ATTEMPTS = 5
@@ -51,12 +51,13 @@ def _certificate_line(cert: Certificate, outcome: str, revision: int | None) -> 
     return f"decision={outcome} against {revision_text} — class {cert.cls}"
 
 
-def _aspect_url(urn: str, base_url: str) -> str:
+def _aspect_url(urn: str, base_url: str | None = None) -> str:
+    base_url = base_url or default_base_url()
     enc = urllib.parse.quote(urn, safe="")
     return f"{base_url}/openapi/v3/entity/dataset/{enc}/institutionalMemory"
 
 
-def _read_with_version(urn: str, *, base_url: str = DEFAULT_BASE_URL) -> dict:
+def _read_with_version(urn: str, *, base_url: str | None = None) -> dict:
     """Current institutional memory plus the aspect version it was read at.
 
     The v3 endpoint is used deliberately. The v2 single-aspect GET returns 400
@@ -75,7 +76,7 @@ def _read_with_version(urn: str, *, base_url: str = DEFAULT_BASE_URL) -> dict:
     return {"value": body.get("value") or {}, "version": int(raw) if raw else None}
 
 
-def read_published(urn: str, *, base_url: str = DEFAULT_BASE_URL) -> dict | None:
+def read_published(urn: str, *, base_url: str | None = None) -> dict | None:
     """What a later reader inherits. None when nothing was ever published."""
     response = requests.get(_aspect_url(urn, base_url), timeout=30)
     if response.status_code == 404:
@@ -92,7 +93,7 @@ def publish_certificate(
     revision: int | None,
     decided_at_ms: int,
     certificate_url: str,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str | None = None,
     events: list[dict] | None = None,
 ) -> str:
     """Append the certificate to institutional memory, preserving what was there.
@@ -116,6 +117,7 @@ def publish_certificate(
             "A later reader must be able to open the certificate, not just read a summary."
         )
 
+    base_url = base_url or default_base_url()
     element = {
         "url": certificate_url,
         "description": _certificate_line(cert, outcome, revision),

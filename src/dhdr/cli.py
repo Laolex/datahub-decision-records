@@ -9,6 +9,7 @@ from any working directory and from anyone's checkout.
 import argparse
 import asyncio
 import json
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -17,7 +18,8 @@ from pathlib import Path
 from reckon import MemorySink, Recorder
 
 from .certify import Certificate, certify
-from .coordinate import DEFAULT_BASE_URL as DEFAULT_BASE_URL_MARKER
+from .coordinate import GMS_URL_ENV_VAR
+from .coordinate import default_base_url as DEFAULT_BASE_URL_MARKER
 from .coordinate import lineage_facts
 from .proxy import CaptureProxy, McpCaptureProxy
 from .publish import publish_certificate
@@ -280,7 +282,7 @@ async def live_decisions(
     ]
 
 
-def reset_institutional_memory(urn: str, base_url: str = DEFAULT_BASE_URL_MARKER) -> None:
+def reset_institutional_memory(urn: str, base_url: str | None = None) -> None:
     """Clear the dataset's institutionalMemory before a demo run.
 
     Repeated demo runs otherwise accumulate certificates whose artifacts were
@@ -291,6 +293,7 @@ def reset_institutional_memory(urn: str, base_url: str = DEFAULT_BASE_URL_MARKER
     """
     import requests
 
+    base_url = base_url or DEFAULT_BASE_URL_MARKER()
     requests.post(
         f"{base_url}/openapi/v3/entity/dataset",
         json=[{"urn": urn, "institutionalMemory": {"value": {"elements": []}}}],
@@ -407,6 +410,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="dhdr", description="Decision records for DataHub agents."
     )
+    parser.add_argument(
+        "--base-url",
+        default=None,
+        metavar="URL",
+        help=(
+            f"DataHub GMS endpoint (default: ${GMS_URL_ENV_VAR}, "
+            f"else {DEFAULT_BASE_URL_MARKER()})"
+        ),
+    )
     sub = parser.add_subparsers(dest="command")
 
     demo = sub.add_parser(
@@ -441,6 +453,13 @@ def main(argv: list[str] | None = None) -> int:
     sarif.set_defaults(func=_sarif)
 
     args = parser.parse_args(argv)
+
+    # Export rather than thread: the MCP server and the DataHub SDK read this
+    # same variable out of the environment, and a flag that moved only our own
+    # reads would point the two halves of the demo at different instances.
+    if args.base_url:
+        os.environ[GMS_URL_ENV_VAR] = args.base_url
+
     if getattr(args, "func", None) is None:
         return _demo(args)          # bare `dhdr` runs the demo
     return args.func(args)

@@ -14,6 +14,7 @@ for the two settings to apply when you do.
 """
 
 import json
+import os
 import subprocess
 import sys
 import urllib.parse
@@ -23,7 +24,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-GMS = "http://localhost:8080"
+GMS = os.environ.get("DATAHUB_GMS_URL", "http://localhost:8080")
 DATAPACK = "https://raw.githubusercontent.com/datahub-project/static-assets/main/datapacks/showcase-ecommerce"
 
 # Aspects the DataHub Cloud datapack carries that Core's GMS rejects with a 422.

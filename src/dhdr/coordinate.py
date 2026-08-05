@@ -10,12 +10,32 @@ is a query parameter on the v2 single-aspect GET. Conflating the two produces a
 false negative — it did once, during the probe that established this module.
 """
 
+import os
 import urllib.parse
 from dataclasses import dataclass
 
 import requests
 
-DEFAULT_BASE_URL = "http://localhost:8080"
+GMS_URL_ENV_VAR = "DATAHUB_GMS_URL"
+FALLBACK_BASE_URL = "http://localhost:8080"
+
+
+def default_base_url() -> str:
+    """Where DataHub is, resolved when it is asked for.
+
+    `DATAHUB_GMS_URL` is the variable the DataHub SDK and MCP server already
+    read, so a reader who has configured either of those has configured this
+    too. Resolving here rather than binding a module constant into every
+    signature is what makes the variable — and `dhdr --base-url` — actually
+    move the endpoint. Binding at import time is earlier than any caller can
+    reach, which is how the knob came to be documented but inert.
+    """
+    return os.environ.get(GMS_URL_ENV_VAR, FALLBACK_BASE_URL)
+
+
+#: Import-time snapshot. Kept because it reads well in messages and tests, but
+#: never use it as a default argument — see `default_base_url()`.
+DEFAULT_BASE_URL = default_base_url()
 
 
 @dataclass(frozen=True)
@@ -32,7 +52,7 @@ def read_aspect(
     aspect: str,
     *,
     version: int = 0,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str | None = None,
 ) -> AspectVersion:
     """Read one aspect pinned to one revision. version=0 means latest.
 
@@ -45,6 +65,7 @@ def read_aspect(
     all of them, takes the same `version` parameter, reports the true version in
     `systemMetadata`, and 404s past the end of the range.
     """
+    base_url = base_url or default_base_url()
     enc = urllib.parse.quote(urn, safe="")
     response = requests.get(
         f"{base_url}/openapi/v3/entity/dataset/{enc}/{aspect.lower()}",
@@ -66,7 +87,7 @@ def history(
     urn: str,
     aspect: str,
     *,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str | None = None,
     max_versions: int = 500,
 ) -> list[AspectVersion]:
     """Every readable revision of an aspect, oldest first.
@@ -147,7 +168,7 @@ def resolve_at(
     aspect: str,
     at_ms: int,
     *,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str | None = None,
 ) -> AspectVersion | None:
     """The revision in force at `at_ms`.
 
@@ -171,7 +192,7 @@ def bind_revision(
     observed_payload: dict,
     at_ms: int,
     *,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: str | None = None,
     extract=lineage_facts,
 ) -> AspectVersion | None:
     """Bind an observed payload to the revision that produced it, or to nothing.

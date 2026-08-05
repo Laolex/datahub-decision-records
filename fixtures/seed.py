@@ -27,7 +27,7 @@ from dataclasses import dataclass
 
 import requests
 
-from dhdr.coordinate import DEFAULT_BASE_URL
+from dhdr.coordinate import default_base_url
 
 TARGET = "urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.order_entry.orders,PROD)"
 CONSUMER = "urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)"
@@ -42,7 +42,8 @@ class SeededWorld:
     decision_ms: int
 
 
-def _emit_lineage(urn: str, upstreams: list[str], base_url: str) -> None:
+def _emit_lineage(urn: str, upstreams: list[str], base_url: str | None = None) -> None:
+    base_url = base_url or default_base_url()
     body = [
         {
             "urn": urn,
@@ -65,7 +66,7 @@ def _emit_lineage(urn: str, upstreams: list[str], base_url: str) -> None:
 
 
 def set_consumer_lineage(
-    upstreams: list[str], base_url: str = DEFAULT_BASE_URL
+    upstreams: list[str], base_url: str | None = None
 ) -> None:
     """Move the consumer's lineage to one state and stop.
 
@@ -76,7 +77,7 @@ def set_consumer_lineage(
     _emit_lineage(CONSUMER, upstreams, base_url)
 
 
-def seed_schema_ops(base_url: str = DEFAULT_BASE_URL) -> SeededWorld:
+def seed_schema_ops(base_url: str | None = None) -> SeededWorld:
     """Write the two lineage states with a measurable gap between them.
 
     Returns the instants that matter: `decision_ms` sits inside the window when
@@ -125,7 +126,8 @@ class SeededAccessWorld:
     decision_ms: int
 
 
-def _emit_terms(urn: str, terms: list[str], base_url: str) -> None:
+def _emit_terms(urn: str, terms: list[str], base_url: str | None = None) -> None:
+    base_url = base_url or default_base_url()
     body = [
         {
             "urn": urn,
@@ -146,7 +148,7 @@ def _emit_terms(urn: str, terms: list[str], base_url: str) -> None:
     response.raise_for_status()
 
 
-def seed_access(base_url: str = DEFAULT_BASE_URL) -> SeededAccessWorld:
+def seed_access(base_url: str | None = None) -> SeededAccessWorld:
     """Two states: before the PII term is applied, and after."""
     _emit_terms(ACCESS_TARGET, [], base_url)
     before_ms = int(time.time() * 1000)
