@@ -37,6 +37,12 @@ jobs:
       - name: Install
         run: pip install -e .
 
+      # Runs before the certificate is produced, and needs no DataHub. If the
+      # refusal has stopped holding, the certificate this workflow uploads is
+      # not worth looking at, so there is no point generating it.
+      - name: Negative control (the refusal must still hold)
+        run: python scripts/negative_control.py
+
       - name: Produce the certificate
         env:
           DATAHUB_GMS_URL: ${{ vars.DATAHUB_GMS_URL }}
