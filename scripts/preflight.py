@@ -1,3 +1,4 @@
+#!/opt/datahub-probe-venv/bin/python
 """Check that this DataHub instance can actually demonstrate the flip.
 
 Run this before the test suite. The integration tests need two things that a

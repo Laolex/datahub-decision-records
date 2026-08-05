@@ -1,3 +1,4 @@
+#!/opt/datahub-probe-venv/bin/python
 """One command from a running DataHub to a certified decision.
 
     python scripts/quickstart.py

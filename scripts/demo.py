@@ -1,3 +1,4 @@
+#!/opt/datahub-probe-venv/bin/python
 """The demo, paced for recording.
 
 `dhdr demo` prints the result. This prints the *story*, at a speed a viewer can
