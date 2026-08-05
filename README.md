@@ -72,12 +72,6 @@ on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that c
 lineage change reaches the graph index in seconds and stays invisible to the agent for hours,
 and the demonstration times out rather than passing on stale context.
 
-**Don't want to run anything?** [`examples/`](examples/) holds real artifacts from a real run —
-both decision records, both certificates, the MCP transcript, the SARIF the CI gate uploads, the
-ablation table, and what a later reader inherits from `institutionalMemory`. And the
-[hosted walkthrough](https://laolex.github.io/datahub-decision-records/) shows the same output
-with commentary.
-
 Expect the DataHub bring-up itself to dominate the wall clock on a cold machine; everything after
 it is seconds.
 

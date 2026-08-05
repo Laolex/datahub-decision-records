@@ -124,6 +124,28 @@ value_source=mcp means it decided on the protocol response, not a re-fetch.</pre
 response it actually received, not on a value re-fetched afterwards. Between two fetches the
 metadata can move, and then the revision on the record is not the revision that decided.</p>
 
+<h2>What "Capability class: C2" means</h2>
+
+<p>Every certificate above reports a <strong>capability class</strong>, never a score. The classes
+are ordinal — each one is the previous plus a stronger question the record can answer:</p>
+
+<table>
+<tr><th>class</th><th>the record supports asking&hellip;</th></tr>
+<tr><td><strong>C0</strong></td><td>can this decision be reproduced identically? (identity replay)</td></tr>
+<tr><td><strong>C1</strong></td><td>&hellip;and would a <em>stricter</em> policy have changed the outcome?</td></tr>
+<tr><td><strong>C2</strong></td><td>&hellip;and would a <em>looser</em> one? This is what a bound, complete record earns.</td></tr>
+<tr><td><strong>C3</strong></td><td>&hellip;and what about decisions whose own writes change what later decisions read? <strong>Never certified</strong> &mdash; reported as the boundary where deductive evidence stops.</td></tr>
+<tr><td><strong>none</strong></td><td>a deciding read could not be tied to a revision, so nothing is certifiable. Not &ldquo;C2 with a warning&rdquo;.</td></tr>
+</table>
+
+<p>So <code>C2</code> above means: the record carries enough evidence to ask what this agent would
+have decided under a different policy, bounded to the revision the read was bound to. It does
+<em>not</em> mean the decision was correct &mdash; <code>dhdr</code> does not adjudicate the drop, only
+whether the record supports asking about it later.</p>
+
+<p>A percentage is deliberately never produced. A score averaged over incommensurable kinds of
+missing evidence manufactures exactly the false confidence this exists to prevent.</p>
+
 <h2>What the next reader inherits</h2>
 
 <p>A decision that is not published is not inherited. Each certificate is written back to the

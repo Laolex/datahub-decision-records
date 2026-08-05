@@ -3,7 +3,17 @@ name = "dhdr"
 version = "0.1.0"
 description = "Decision records for DataHub agents: bind every context read to the metadata revision that justified it"
 requires-python = ">=3.11"
-dependencies = ["reckon-rcdr>=0.1.1", "requests>=2.31"]
+dependencies = [
+  "reckon-rcdr>=0.1.1",
+  "requests>=2.31",
+  # The MCP path is the point of this project, not an optional extra: the proxy
+  # imports fastmcp directly, and the agent reads through mcp-server-datahub
+  # against acryl-datahub's client. Leaving these undeclared made `pip install
+  # -e '.[dev]'` produce an install that cannot run the demo it documents.
+  "acryl-datahub>=1.6",
+  "mcp-server-datahub>=0.6",
+  "fastmcp>=3.0",
+]
 license = { text = "Apache-2.0" }
 
 [project.optional-dependencies]

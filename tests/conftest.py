@@ -29,10 +29,22 @@ def _datahub_unavailable() -> str | None:
         return _SKIP_REASON
     _CHECKED = True
     try:
-        requests.get(f"{DEFAULT_BASE_URL}/health", timeout=5).raise_for_status()
+        # `/health` is an empty 200 that any server can produce, and port 8080 is
+        # the most contended port in software — Tomcat, Jenkins, any dev server.
+        # Trusting a bare 200 there makes the integration tests *run* against
+        # something that is not DataHub and fail confusingly, on the exact path
+        # the README calls "no DataHub needed". `/config` identifies itself.
+        response = requests.get(f"{DEFAULT_BASE_URL}/config", timeout=5)
+        response.raise_for_status()
+        body = response.json()
+        if "datahub" not in body and "managedIngestion" not in body:
+            raise RuntimeError(
+                "something answered but it does not look like DataHub "
+                "(no 'datahub' key in /config)"
+            )
         _SKIP_REASON = None
     except Exception as exc:  # noqa: BLE001
-        _SKIP_REASON = f"DataHub not reachable at {DEFAULT_BASE_URL}: {exc}"
+        _SKIP_REASON = f"DataHub not usable at {DEFAULT_BASE_URL}: {exc}"
     return _SKIP_REASON
 
 
