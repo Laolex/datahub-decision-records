@@ -42,7 +42,12 @@ pytest -q          # 22 passed, 32 skipped — the skipped ones need a live Data
 ```
 
 The tests that *do* need DataHub skip by marker rather than failing, so a green run here means
-something. This includes the ablation, which is the part that reports honestly on what is and is
+something.
+
+One caveat if you go on to run the integration tests: they **mutate lineage on the instance**,
+because demonstrating that a decision flips requires the world to actually move. Two suites
+running against the same DataHub at once will fight over that state and produce a spurious
+failure. One suite per instance. This includes the ablation, which is the part that reports honestly on what is and is
 not load-bearing in this design.
 
 **3. The whole thing against a live DataHub.** From a running instance to a certified decision, in
