@@ -62,7 +62,7 @@ with commentary. Its certificate links resolve.
 ```bash
 git clone https://github.com/Laolex/datahub-decision-records && cd datahub-decision-records
 pip install -e '.[dev]'
-pytest -q          # 41 pass with no instance; the rest skip by marker, not by failing
+pytest -q          # 43 pass with no instance; the rest skip by marker, not by failing
 ```
 
 **The whole thing against a live DataHub** — `python scripts/quickstart.py`, one command from a
@@ -461,7 +461,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-76 tests: 41 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
+78 tests: 43 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
