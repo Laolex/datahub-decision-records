@@ -9,20 +9,22 @@ first: is anything still using it?
 An AI agent can answer that. It looks up what depends on the table, finds nothing, and says the
 deletion is safe. It writes down its reasoning. So far so good.
 
-Three weeks later a dashboard is broken and someone asks why the agent allowed it. They open the
-note the agent wrote. It says *"nothing was using it."* But the answer to that question changes
-over time — something may have started using the table an hour before the agent looked, or an
-hour after. **The note doesn't say which version of the world it was describing.** So nobody can
-tell whether the agent was wrong, or whether it was right about a world that had already changed.
+Three weeks later a dashboard is broken. Someone asks why the agent allowed it. They open the
+note the agent wrote. It says *"nothing was using it."*
 
-That is the whole problem this project fixes. Every time the agent looks something up, we record
-*exactly which version* of the company's records it saw — not just what it saw. Now the note
-reads "nothing was using it, according to version 461, recorded at 22:24:56", and the question is
-answerable. And when we can't establish which version the agent saw, we say so and refuse to
-vouch for the decision, rather than issuing a clean-looking approval.
+But that answer changes over time. Something may have started using the table an hour before the
+agent looked. Or an hour after. **The note does not say which version of the world it describes.**
+So nobody can tell whether the agent was wrong, or right about a world that had already changed.
 
-The demo shows one agent making the identical request twice, seconds apart, while someone changes
-a data pipeline in between — and reaching opposite conclusions. The two notes look the same. Only
+This project fixes that. Every time the agent looks something up, we record *which version* of the
+company's records it saw — not only what it saw. The note now reads "nothing was using it,
+according to version 461, recorded at 22:24:56". The question is answerable.
+
+And when we cannot establish which version the agent saw, we say so. We refuse to vouch for the
+decision rather than issue an approval that looks clean.
+
+The demo shows one agent making the same request twice, seconds apart. Someone changes a data
+pipeline in between. The agent reaches opposite conclusions. The two notes look identical. Only
 our record can tell you which world each was made in.
 
 ---
@@ -31,23 +33,23 @@ our record can tell you which world each was made in.
 from DataHub context — lineage, ownership, glossary terms — and can prove **which version of that
 context justified each decision**.
 
-Reading metadata to decide something is the easy half. The hard half arrives later, when
-someone asks why the agent allowed a column drop that broke a dashboard. The lineage has
-moved since. The log says "no consumers found", and there is nothing in it that says whether
-that was true at the time or merely true of a stale read. `dhdr` closes that: every context
-read an agent performs is bound to the metadata revision in force when the read happened, and
-a decision whose reads cannot be bound is reported as certifying nothing rather than as
-passing.
+Reading metadata to decide something is the easy half. The hard half arrives later, when someone
+asks why the agent allowed a column drop that broke a dashboard. The lineage has moved since. The
+log says "no consumers found". Nothing in it says whether that was true at the time, or only true
+of a stale read.
+
+`dhdr` closes that gap. Every context read is bound to the metadata revision that was in force
+when the read happened. A decision whose reads cannot be bound is reported as certifying nothing,
+not as passing.
 
 Built for **Build with DataHub — The Agent Hackathon**, track *Agents That Do Real Work*.
 
 **Walkthrough with real output: https://laolex.github.io/datahub-decision-records/** — every
 block on that page was produced by the code here, against a live DataHub Core instance.
 
-> **Status.** The capture core, revision binding, the schema-ops agent, the certifier,
-> write-back and the demo CLI are built and tested against a live DataHub Core v1.5.0.6
-> instance, and everything in `examples/` was produced by running them. Nothing here claims a
-> result it has not produced.
+> **Status.** The capture core, revision binding, both agents, the certifier, write-back and the
+> demo CLI are built and tested against a live DataHub Core v1.5.0.6 instance. Everything in
+> `examples/` was produced by running them. Nothing here claims a result it has not produced.
 
 ## Try it
 
@@ -93,13 +95,15 @@ the facts do not discriminate. Both are **unbound**, and an unbound deciding rea
 capability class to none — never "C2, but one read is unbound", which is exactly the phrasing a
 hurried reader takes as certification.
 
-**The change artifact.** A verdict nobody can act on is not much use, so each decision carries
-the concrete change it is about: `ALTER TABLE … DROP COLUMN promo_code;` when the drop is
-allowed, and a deprecation comment naming the consumer that still reads it when it is refused. A
-refusal that proposes the safe alternative is the part that does real work. The artifact is
-**proposed and never applied** — `dhdr` decides and records, it does not run migrations, and
-there is deliberately no code here that would. The record commits to it by `params_digest`, so
-the certificate names which change it certified without carrying a copy that could drift.
+**The change artifact.** A verdict nobody can act on is not much use. So each decision carries the
+concrete change it is about. When the drop is allowed, that is `ALTER TABLE … DROP COLUMN
+promo_code;`. When it is refused, it is a deprecation comment naming the consumer that still reads
+the column. A refusal that proposes the safe alternative is the part that does real work.
+
+The artifact is **proposed and never applied**. `dhdr` decides and records. It does not run
+migrations, and there is deliberately no code here that would. The record commits to the artifact
+by `params_digest`, so the certificate names which change it certified without carrying a copy
+that could drift from it.
 
 **The recorded agent** (`scenarios/schema_ops.py`) decides whether dropping a column is safe,
 over real datasets from DataHub's `showcase-ecommerce` datapack, emitting a
@@ -113,12 +117,14 @@ missing evidence manufactures false confidence. C3 is certified as a *boundary*:
 decision mutates metadata a later decision reads, the certificate states where deductive
 evidence ends and counterfactual inference begins, and claims nothing past that line.
 
-It also refuses a pairing it cannot justify. `certify` receives the record and the captured
-reads as separate arguments, and nothing about the call obliges them to describe the same
-decision — every individual piece can be honest while the assembly is wrong, which produces a
-clean-looking certificate over a decision that never happened. So the record's revision must
-match a revision some supplied read actually bound to, or the class collapses to none. That
-check needs no extra capture: the record already names the revision it was decided against.
+It also refuses a pairing it cannot justify. `certify` receives the record and the captured reads
+as separate arguments. Nothing about the call obliges them to describe the same decision. Every
+individual piece can be honest while the assembly is wrong, and the result is a clean-looking
+certificate over a decision that never happened.
+
+So the record's revision must match a revision that some supplied read actually bound to. If it
+does not, the class collapses to none. The check needs no extra capture, because the record
+already names the revision it was decided against.
 
 **Write-back** (`src/dhdr/publish.py`) puts the certificate into the dataset's
 `institutionalMemory`, so the next agent or engineer inherits what was decided, against which
@@ -128,16 +134,18 @@ a later human cannot open is not memory. The agent's own write is itself state a
 may read, so it is surfaced as a C3 boundary — derived from a recorded publish event, never from
 a flag the caller passed.
 
-One limitation stated plainly, because the alternative would be the failure this project is
-about. The write is **not atomic**. On DataHub Core v1.5.0.6 neither available mechanism works
-for this aspect: `If-Version-Match` is documented as an optimistic-concurrency precondition but
-is not enforced on the write endpoint — a stale-version write returns 200 and overwrites — and
-server-side JSON patch has no template registered for `institutionalMemory`, though it does for
-`globalTags` and `upstreamLineage`. What this module does is read-append-write with a verified
-read-back: it carries forward every element it saw and retries if its own element did not land.
-That preserves anything written before it read, and detects being overwritten. It does not close
-the race where another writer lands between our read and our write. Both facts are pinned by
-tests that fail if the platform starts supporting either mechanism.
+One limitation, stated plainly. The write is **not atomic**.
+
+On DataHub Core v1.5.0.6 neither available mechanism works for this aspect. `If-Version-Match` is
+documented as an optimistic-concurrency precondition, but the write endpoint does not enforce it —
+a stale-version write returns 200 and overwrites. And server-side JSON patch has no template
+registered for `institutionalMemory`, though it does for `globalTags` and `upstreamLineage`.
+
+So this module does read-append-write with a verified read-back. It carries forward every element
+it saw, and retries if its own element did not land. That preserves anything written before it
+read, and detects being overwritten. It does **not** close the race where another writer lands
+between our read and our write. Both platform facts are pinned by tests that fail if either
+mechanism starts working.
 
 The capture core is domain-ignorant by construction. It knows about reads, versions,
 predicates and candidate sets. It does not know what a schema, an owner or a pipeline is. If a
@@ -150,13 +158,14 @@ required no change to `proxy.py` or `certify.py`, and the knowledge of which glo
 restrict access lives in the scenario, because the core takes an extractor as an argument
 precisely so it never has to hold any.
 
-It did force one change, and it is the reason a second domain was worth building: `read_aspect`
-was reading through the openapi **v2** endpoint, which returns 400 for `glossaryTerms`,
-`institutionalMemory` and `status` on Core v1.5.0.6 — it fails to deserialise its own
-`SystemMetadata` — while handling `upstreamLineage` fine. A lineage-only suite reports a healthy
-coordinate layer that cannot read three aspects at all, with `history()` coming back empty and
-every read binding to nothing, silently. That is now a v3 read, with a regression test that
-exercises a non-lineage aspect.
+It did force one change, and that is why a second domain was worth building. `read_aspect` was
+reading through the openapi **v2** endpoint. That endpoint returns 400 for `glossaryTerms`,
+`institutionalMemory` and `status` on Core v1.5.0.6, because it fails to deserialise its own
+`SystemMetadata`. It handles `upstreamLineage` fine.
+
+So a lineage-only test suite reports a healthy coordinate layer that cannot read three aspects at
+all. `history()` comes back empty, every read binds to nothing, and nothing raises. It is now a v3
+read, with a regression test that exercises a non-lineage aspect.
 
 ## Scenarios
 
@@ -248,17 +257,18 @@ policy.resolution.revision     C2
 read binding (unbound read)    none
 ```
 
-The fifth row is the one worth reporting, and it is not flattering: **deleting the revision from
-the record costs nothing.** The underlying verifier has no concept of a DataHub aspect version,
-so a record carrying a revision and a record missing one certify identically. The revision in the
-record is documentation for whoever reads it later. It is not evidence, and it does not defend
-itself.
+The fifth row is the one worth reporting, and it does not favour us. **Deleting the revision from
+the record costs nothing.** The underlying verifier has no concept of a DataHub aspect version. A
+record carrying a revision and a record missing one certify identically. The revision in the
+record is documentation for a later reader. It is not evidence.
 
-What is load-bearing is the last row — the binding. A read that could not be tied to a revision
-collapses the class to none. So this project's contribution to soundness is the *refusal*: the
-value is in declining to certify a decision whose world cannot be named, not in annotating a
-record with a version string. Both results are pinned by tests, so if the upstream verifier ever
-starts checking the revision, this section is what breaks.
+What carries the weight is the last row — the binding. A read that could not be tied to a revision
+collapses the class to none. So this project's contribution to soundness is the *refusal*. The
+value is in declining to certify a decision whose world cannot be named. It is not in annotating a
+record with a version string.
+
+Both results are pinned by tests. If the upstream verifier ever starts checking the revision, this
+section is what breaks.
 
 ## Why the coordinate has to be recovered
 
@@ -277,20 +287,21 @@ Worth stating plainly, because a thesis that depends on a gap staying open is a 
 [#181](https://github.com/acryldata/mcp-server-datahub/issues/181) is a request for that gap to
 close.
 
-**Almost all of this survives, and the part that goes away is the part we would most like to
-lose.** If `get_lineage` grew an `as_of` parameter tomorrow — or merely echoed
-`systemMetadata.version` in its response — the *acquisition* of the coordinate would get simpler
-and better: the fact-matching in `coordinate.py` exists only because the response cannot date
-itself, and a read that carries its own version needs no matching at all. That is a workaround
-retiring, which is what a workaround is for.
+**Almost all of this survives.** And the part that goes away is the part we would most like to
+lose.
 
-What does not change is everything downstream of having the coordinate: binding it to the
-decision, refusing to certify when it cannot be bound, reporting a capability class rather than a
-percentage, declaring the C3 boundary where the agent's own write couples it to future state, and
-publishing the certificate somewhere the next reader inherits it. None of that follows from the
-gap. It follows from the design law — *a record that cannot name the revision it was made against
-is not a record of a decision* — which is true of any agent reading any versioned metadata,
-including one whose platform hands it the version for free.
+Suppose `get_lineage` grew an `as_of` parameter tomorrow, or simply echoed
+`systemMetadata.version` in its response. Acquiring the coordinate would get simpler. The
+fact-matching in `coordinate.py` exists only because the response cannot date itself; a read that
+carries its own version needs no matching. That is a workaround retiring, which is what a
+workaround is for.
+
+Everything downstream of having the coordinate does not change. Binding it to the decision.
+Refusing to certify when it cannot be bound. Reporting a capability class rather than a
+percentage. Declaring the C3 boundary where the agent's own write couples it to future state.
+Publishing the certificate where the next reader inherits it. None of that follows from the gap. It follows from the design law: *a record that cannot name the revision it was made against is not
+a record of a decision.* That is true of any agent reading any versioned metadata — including one
+whose platform hands it the version for free.
 
 Two things get *easier* rather than harder in that world. The race this design has to guard
 against — metadata moving between the agent's read and the resolver's — disappears, because the
@@ -306,7 +317,7 @@ the annotation.
 
 A certificate printed by a CLI is read once, by the person who ran it. A certificate that arrives
 as an annotation on a pull request is read by whoever is about to merge — the moment it can still
-change something. That is the second design law doing work: *a record nobody keeps certifies
+change something. That is the second design law in practice: *a record nobody keeps certifies
 nothing.*
 
 ```bash
@@ -381,9 +392,9 @@ first; it sets the one required setting and closes a security hole in the stock 
 (every service, including an unauthenticated OpenSearch, is published on `0.0.0.0`).
 
 The one required setting, if you would rather apply it by hand: **`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`**
-on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that cache — so a
-lineage change reaches the graph index in seconds and stays invisible to the agent for hours,
-and the demonstration times out rather than passing on stale context.
+on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that cache. So a lineage change
+reaches the graph index in seconds, then stays invisible to the agent for hours. The demonstration
+times out rather than passing on stale context.
 
 Expect the DataHub bring-up itself to dominate the wall clock on a cold machine; everything after
 it is seconds.
@@ -468,10 +479,10 @@ rather than passing on stale context.
 
 ## Reproduce
 
-Everything in [`examples/`](examples/) is a real artifact produced by the code in this repo, not
-a description of one — two decision records, their certificates, the demo transcript, the live
-MCP flip, the ablation table, and what a later reader inherits from `institutionalMemory`.
-Regenerate all of it with one command against a live instance:
+Everything in [`examples/`](examples/) is a real artifact produced by this code, not a description
+of one. Two decision records, their certificates, the demo transcript, the live MCP flip, the
+ablation table, and what a later reader inherits from `institutionalMemory`. Regenerate all of it
+with one command against a live instance:
 
 ```bash
 python scripts/generate_examples.py
@@ -490,9 +501,9 @@ that needs an instance; if you have one and it behaves differently, that is wort
 
 The scenario decides over real datasets from DataHub's own `showcase-ecommerce` datapack, not
 invented URNs — MCP resolves upstreams that exist *as entities*, so a fabricated URN produces a
-demo that silently binds to nothing. Note that `datahub datapack load showcase-ecommerce` does
-**not** fetch the real pack (it writes ~54 bundled records and reports success), so fetch it
-directly and filter the DataHub Cloud aspects that Core's GMS rejects with a 422:
+demo that silently binds to nothing. Two things to know first. `datahub datapack load showcase-ecommerce` does **not** fetch the real
+pack — it writes about 54 bundled records and reports success. And the real pack contains DataHub
+Cloud aspects that Core's GMS rejects with a 422. So fetch it directly and filter those out:
 
 ```bash
 mkdir -p datapack && cd datapack
@@ -553,9 +564,9 @@ fact-matching, both scenario agents, the certifier and its pairing guard, write-
 
 The full set of eleven invariants — the properties that must hold when every line of this
 implementation has been replaced — are enumerated in the design document and summarised above.
-The two that constrain the most code: the decision input is the response the agent received,
-and absence of evidence is recorded as absence (a field that was not captured is
-distinguishable in the ledger from a field captured as empty).
+Two of them constrain the most code. First, the decision input is the response the agent received.
+Second, absence of evidence is recorded as absence — a field that was not captured stays
+distinguishable from a field captured as empty.
 
 ## Non-goals
 
