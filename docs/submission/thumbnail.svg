@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <rect width="1500" height="1000" fill="#fbfbfa"/>
+  <rect width="1500" height="10" fill="#7a4d1e"/>
+
+  <!-- kicker -->
+  <text x="80" y="112" font-family="DejaVu Sans Mono" font-size="20" letter-spacing="2.6"
+        fill="#5c5c56">BUILD WITH DATAHUB · AGENTS THAT DO REAL WORK</text>
+
+  <!-- title -->
+  <text x="80" y="205" font-family="DejaVu Serif" font-size="74" font-weight="bold"
+        fill="#1a1a18">Decision records for</text>
+  <text x="80" y="285" font-family="DejaVu Serif" font-size="74" font-weight="bold"
+        fill="#1a1a18">DataHub agents</text>
+
+  <!-- lede -->
+  <text x="80" y="352" font-family="DejaVu Serif" font-size="28" fill="#5c5c56">The agent said nothing was using that column.</text>
+  <text x="80" y="394" font-family="DejaVu Serif" font-size="28" font-weight="bold" fill="#1a1a18">It never said which version of the world it meant.</text>
+
+  <!-- admit card -->
+  <rect x="80" y="446" width="560" height="212" rx="14" fill="#ffffff" stroke="#2f6b3a" stroke-width="2.5"/>
+  <text x="114" y="490" font-family="DejaVu Sans Mono" font-size="18" letter-spacing="1.8"
+        fill="#5c5c56">AS THE AGENT SAW IT</text>
+  <text x="114" y="570" font-family="DejaVu Sans Mono" font-size="58" font-weight="bold"
+        fill="#2f6b3a">admit</text>
+  <text x="114" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v661</tspan></text>
+
+  <!-- between -->
+  <text x="750" y="519" text-anchor="middle" font-family="DejaVu Serif" font-size="21"
+        font-style="italic" fill="#5c5c56">same agent</text>
+  <text x="750" y="551" text-anchor="middle" font-family="DejaVu Serif" font-size="21"
+        font-style="italic" fill="#5c5c56">same call</text>
+  <text x="750" y="583" text-anchor="middle" font-family="DejaVu Serif" font-size="21"
+        font-style="italic" fill="#5c5c56">seconds apart</text>
+
+  <!-- reject card -->
+  <rect x="860" y="446" width="560" height="212" rx="14" fill="#ffffff" stroke="#9a3324" stroke-width="2.5"/>
+  <text x="894" y="490" font-family="DejaVu Sans Mono" font-size="18" letter-spacing="1.8"
+        fill="#5c5c56">AS IT ACTUALLY WAS</text>
+  <text x="894" y="570" font-family="DejaVu Sans Mono" font-size="58" font-weight="bold"
+        fill="#9a3324">reject</text>
+  <text x="894" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v662</tspan></text>
+
+  <!-- law -->
+  <rect x="80" y="722" width="6" height="128" fill="#7a4d1e"/>
+  <text x="112" y="772" font-family="DejaVu Serif" font-size="30" font-style="italic"
+        fill="#1a1a18">A record that cannot name the revision it was made</text>
+  <text x="112" y="818" font-family="DejaVu Serif" font-size="30" font-style="italic"
+        fill="#1a1a18">against is not a record of a decision.</text>
+
+  <!-- footer -->
+  <line x1="80" y1="900" x2="1420" y2="900" stroke="#dededa" stroke-width="1.5"/>
+  <text x="80" y="944" font-family="DejaVu Sans Mono" font-size="19"
+        fill="#5c5c56">github.com/Laolex/datahub-decision-records</text>
+  <text x="1420" y="944" text-anchor="end" font-family="DejaVu Sans Mono" font-size="19"
+        fill="#5c5c56">C0–C3 · a class, never a percentage</text>
+</svg>

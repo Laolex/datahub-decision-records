@@ -1,10 +1,11 @@
 import sys
+from pathlib import Path
 import time
 
 import pytest
 from reckon import MemorySink, Recorder
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dhdr.coordinate import resolve_at  # noqa: E402
 from dhdr.proxy import CaptureProxy  # noqa: E402

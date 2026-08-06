@@ -1,9 +1,10 @@
 import sys
+from pathlib import Path
 
 import pytest
 from reckon import MemorySink, Recorder
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dhdr.proxy import CaptureProxy  # noqa: E402
 from fixtures.seed import CONSUMER, TARGET, seed_schema_ops  # noqa: E402

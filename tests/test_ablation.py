@@ -21,8 +21,9 @@ revision field as proof of anything has taken it too far.
 
 import copy
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dhdr.certify import certify  # noqa: E402
 from dhdr.proxy import CapturedRead  # noqa: E402

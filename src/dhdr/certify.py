@@ -111,7 +111,13 @@ def certify(
     if publish_events:
         missing.append(SELF_WRITE_BOUNDARY)
 
-    if _is_mispaired(record, reads):
+    # Order matters, and property-based testing is what surfaced it. An unbound
+    # read can never match the record's revision, so the pairing check fires on
+    # it and reports "not from the same decision" when the truth is "the read
+    # could not be dated at all". Both refuse, but only one of them is an honest
+    # explanation — and a misleading reason on a refusal is its own small
+    # version of the failure this project exists to prevent. Unbound wins.
+    if not unbound and _is_mispaired(record, reads):
         return Certificate(
             cls=None,
             satisfied=False,

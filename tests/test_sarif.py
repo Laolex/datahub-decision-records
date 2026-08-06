@@ -1,7 +1,8 @@
 import json
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dhdr.certify import Certificate  # noqa: E402
 from dhdr.sarif import to_sarif  # noqa: E402

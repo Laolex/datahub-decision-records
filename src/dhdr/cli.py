@@ -376,21 +376,104 @@ def _sarif(args: argparse.Namespace) -> int:
 
 
 def _demo(args: argparse.Namespace) -> int:
-    """The live path: real MCP reads, real write-back, no time travel."""
+    """The live path: real MCP reads, real write-back, no time travel.
+
+    Printed as a numbered timeline rather than two result blocks. The claim is
+    not "here are two outcomes" — it is that the *same question*, asked twice
+    through the same server, was answered both ways, and that only the record
+    can say which world each answer came from. A reader has to be able to watch
+    that happen in order, which two summary blocks do not show.
+    """
     quiet_mcp_logging()
     publish = not getattr(args, "no_publish", False)
     cert_base = getattr(args, "cert_base", DEFAULT_CERT_BASE)
 
-    decisions = asyncio.run(
-        live_decisions(
-            cert_base=cert_base, publish=publish, reset=getattr(args, "reset", False)
-        )
-    )
+    consumer, target, _set_lineage, _decide = _load_live()
+    short_target = target.split(",")[-2] if "," in target else target
+    column = "promo_code"
 
+    step = 0
+    decisions: list[LiveDecision] = []
+
+    def emit(text: str) -> None:
+        nonlocal step
+        print(f"  #{step:<3}{text}")
+        step += 1
+
+    print("\nTIMELINE — one agent, one question, asked twice\n")
+
+    async def run() -> None:
+        first = True
+        async for kind, payload in live_flow(
+            cert_base=cert_base, publish=publish, reset=getattr(args, "reset", False)
+        ):
+            if kind == "settling":
+                # The first settle is the world being put into its starting
+                # state, not a change to it. Announcing "the world moves"
+                # there would claim a pipeline change happened before the
+                # agent had looked at anything.
+                if first:
+                    continue
+                print(
+                    "\n  ···  the world moves: a pipeline change rewires who reads "
+                    f"{short_target}\n"
+                )
+                continue
+
+            decision = payload
+            decisions.append(decision)
+            if first:
+                emit(
+                    f"Read downstream lineage for {short_target} "
+                    "— through the real MCP server"
+                )
+            else:
+                emit(
+                    "The identical call, seconds later, same MCP server "
+                    f"— {short_target}"
+                )
+            if decision.revision is None:
+                emit(
+                    "Could NOT bind that read to any revision — "
+                    "certifying nothing rather than guessing"
+                )
+            else:
+                emit(
+                    f"Bound that read to upstreamLineage v{decision.revision} "
+                    f"(lastObserved={decision.last_observed_ms})"
+                )
+            emit(
+                f"Certified {decision.certificate.cls or 'none'} — "
+                + (
+                    "every deciding read named a revision"
+                    if decision.certificate.cls
+                    else "a read that cannot be placed in time certifies nothing"
+                )
+            )
+            emit(
+                f"DECISION: {decision.outcome} — "
+                + (
+                    f"nothing reads {column} at v{decision.revision}"
+                    if decision.outcome == "admit"
+                    else f"a consumer reads {column} at v{decision.revision}"
+                )
+            )
+            if decision.change is not None:
+                emit(f"Proposed, NOT applied: DROP COLUMN {column}")
+            if decision.published_url:
+                emit(f"Certificate published into DataHub → {decision.published_url}")
+            first = False
+
+    asyncio.run(run())
+
+    print("\n  Same agent. Same call. Opposite decisions.")
+    print("  Neither log can tell you which world it was made in. Both certificates can.")
+
+    print("\n\nCERTIFICATES\n")
     for label, decision in zip(
-        ("as the agent saw it", "as it actually was"), decisions, strict=True
+        ("as the agent saw it", "as it actually was"), decisions, strict=False
     ):
-        print(f"\n=== {label} ===")
+        print(f"=== {label} ===")
         print(f"outcome:  {decision.outcome}")
         print(f"revision: v{decision.revision}  (lastObserved={decision.last_observed_ms})")
         print(decision.certificate.render())
@@ -398,11 +481,7 @@ def _demo(args: argparse.Namespace) -> int:
             print("proposed change:")
             for line in decision.change.render().splitlines():
                 print(f"  {line}")
-        if decision.published_url:
-            print(f"published: {decision.published_url}")
-
-    print("\nSame agent. Same call, through the real MCP server. Opposite decisions.")
-    print("The log cannot tell you which world it was made in. The certificate can.")
+        print()
     return 0
 
 
