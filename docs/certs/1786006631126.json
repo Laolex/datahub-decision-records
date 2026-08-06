@@ -1,0 +1,78 @@
+{
+  "outcome": "reject",
+  "revision": 888,
+  "aspect_last_observed_ms": 1786006626217,
+  "decided_at_ms": 1786006631126,
+  "capability_class": "C2",
+  "satisfied": true,
+  "missing": [],
+  "certificate": "Capability class: C2",
+  "proposed_change": "-- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.\n-- proposed \u2014 not applied by dhdr\nCOMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';",
+  "record": {
+    "rcdr_version": "0.1",
+    "decision_id": "d-0ffe3f79f463",
+    "run_id": "live-after",
+    "sequence": 0,
+    "ts": "2026-08-06T08:57:11.213634+00:00",
+    "outcome": "reject",
+    "action": {
+      "id": "drop_column",
+      "params_digest": "sha256:c5036a0dfef7f44c0970f03a8fae903ec7780b36544ca475fe79bf4c71931b60"
+    },
+    "candidates": {
+      "completeness": "exhaustive",
+      "items": [
+        {
+          "action_id": "drop_column",
+          "compared_value": 1,
+          "outcome": "reject",
+          "predicate_id": "p:61706d6af0ed2414"
+        },
+        {
+          "action_id": "deprecate_instead",
+          "compared_value": 1,
+          "outcome": "admit",
+          "predicate_id": "p:61706d6af0ed2414"
+        }
+      ]
+    },
+    "reads": [
+      {
+        "key": "downstream_consumers",
+        "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v888"
+      }
+    ],
+    "writes": [],
+    "execution": {
+      "runtime": "python3.12.3",
+      "deps_digest": "sha256:d8bb3f30c31262c8398f5e5cd5b1b415d39a5e1fa5decfd64aab53744fc9f023",
+      "path_digest": "sha256:11167e8e159168777dd40b101a2b4f5460ccac8fe97a776201890b3e1d88d259",
+      "seed": null,
+      "clock": null,
+      "pure": true
+    },
+    "capture": {
+      "sdk_version": "0.1.1",
+      "emitter": "dhdr/0.1.0"
+    },
+    "predicate": {
+      "id": "p:61706d6af0ed2414",
+      "operator": "lte",
+      "expression": "downstream_consumers lte max_safe_consumers"
+    },
+    "compared": {
+      "value": 1,
+      "type": "int"
+    },
+    "policy": {
+      "key": "max_safe_consumers",
+      "resolved_value": 0,
+      "resolution": {
+        "provenance": "bundled",
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
+        "revision": "888"
+      }
+    }
+  }
+}

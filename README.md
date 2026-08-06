@@ -49,58 +49,22 @@ block on that page was produced by the code here, against a live DataHub Core in
 > instance, and everything in `examples/` was produced by running them. Nothing here claims a
 > result it has not produced.
 
-## Quickstart
+## Try it
 
-**Three ways in, cheapest first.**
+**Read the outputs, no setup** — [`examples/`](examples/) holds real artifacts from a real run,
+and the [hosted walkthrough](https://laolex.github.io/datahub-decision-records/) shows the same
+with commentary. Its certificate links resolve.
 
-**1. Read the outputs — no setup at all.** [`examples/`](examples/) holds real artifacts from a
-real run: both decision records, both certificates, the live MCP transcript, the SARIF the CI gate
-uploads, the ablation table, and what a later reader inherits from `institutionalMemory`. The
-[hosted walkthrough](https://laolex.github.io/datahub-decision-records/) shows the same with
-commentary, and the certificate links on it resolve.
-
-**2. Run the code — no DataHub needed, about a minute.** The unit tests cover the certifier, the
-SARIF mapping, the change artifact and the ablation, none of which touch a live instance:
+**Run the logic, no DataHub, about a minute:**
 
 ```bash
 git clone https://github.com/Laolex/datahub-decision-records && cd datahub-decision-records
 pip install -e '.[dev]'
-pytest -q          # 22 passed, 32 skipped — the skipped ones need a live DataHub
+pytest -q          # 41 pass with no instance; the rest skip by marker, not by failing
 ```
 
-The tests that *do* need DataHub skip by marker rather than failing, so a green run here means
-something.
-
-One caveat if you go on to run the integration tests: they **mutate lineage on the instance**,
-because demonstrating that a decision flips requires the world to actually move. Two suites
-running against the same DataHub at once will fight over that state and produce a spurious
-failure. One suite per instance. This includes the ablation, which is the part that reports honestly on what is and is
-not load-bearing in this design.
-
-**3. The whole thing against a live DataHub.** From a running instance to a certified decision, in
-one command:
-
-```bash
-pip install -e '.[dev]'
-python scripts/quickstart.py
-```
-
-It checks the instance, ingests DataHub's `showcase-ecommerce` datasets if they are not already
-there, verifies the one setting this depends on, and runs the demo. Safe to re-run.
-
-**Starting DataHub is the one step it does not do for you** — that is `docker compose up` in
-DataHub's own quickstart, and guessing at your compose file would be worse than asking. Copy
-[`quickstart/docker-compose.override.yml`](quickstart/docker-compose.override.yml) next to it
-first; it sets the one required setting and closes a security hole in the stock compose file
-(every service, including an unauthenticated OpenSearch, is published on `0.0.0.0`).
-
-The one required setting, if you would rather apply it by hand: **`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`**
-on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that cache — so a
-lineage change reaches the graph index in seconds and stays invisible to the agent for hours,
-and the demonstration times out rather than passing on stale context.
-
-Expect the DataHub bring-up itself to dominate the wall clock on a cold machine; everything after
-it is seconds.
+**The whole thing against a live DataHub** — `python scripts/quickstart.py`, one command from a
+running instance to a certified decision. Setup detail is in [Running it](#running-it) below.
 
 ## The design law
 
@@ -210,6 +174,92 @@ registers eight tools and that is not among them, because the tool sits behind
 would have meant reading assertions by a route the agent surface does not offer — the opposite of
 this project's argument.
 
+## How we know it is right
+
+Most of this suite was written by the same person who wrote the code, from the same mental
+model. That is worth saying plainly, because it bounds what the tests prove: if the model of
+"which revision was in force at instant T" were wrong, the tests would encode the same wrong
+model and pass. A suite that only checks itself is not evidence of correctness — which is this
+project's own thesis, turned on itself.
+
+So two things check it from outside.
+
+### A differential oracle against DataHub's own storage
+
+`tests/test_oracle.py` does not ask `dhdr` for the answer. It queries `metadata_aspect_v2` — the
+MySQL table DataHub actually stores aspects in — and requires our answer to match, at every
+revision boundary, the millisecond either side of it, and midway between revisions.
+
+**It found a real defect.** DataHub's `systemMetadata.lastObserved` records when metadata was
+last *observed*, not when a revision took effect, and a no-op write refreshes it without creating
+a revision. One case diverged from the row's actual write time by nine hours. `resolve_at` orders
+by `lastObserved`, so it can propose the wrong revision — and at one probed instant it did, naming
+a revision with one upstream where storage said zero.
+
+**The architecture contained it.** `bind_revision`, which is what the agent actually calls,
+compares the deciding facts before binding and *refused*. The wrong proposal became an honest
+"unbound" rather than a false certificate. That safety net was built for a different reason — the
+race where metadata moves between the agent's read and the resolver's — and it caught this too.
+
+So the property the oracle asserts is not "the proposal is always right", which is false and
+demonstrably so. It is the weaker, load-bearing one: **the agent never binds to a revision
+DataHub's storage contradicts.** That holds across every instant probed.
+
+### Properties over generated inputs
+
+`tests/test_properties.py` uses Hypothesis to generate inputs rather than check the examples the
+author happened to think of — which is exactly where an author's blind spot lives.
+
+It found a second defect: with an unbound read and no bound ones, the certificate refused
+correctly but gave the *wrong reason*, reporting "not from the same decision" when the truth was
+"the read could not be dated". Both refuse; only one is honest, and on a project about not
+manufacturing false impressions that distinction is not cosmetic. The check order now puts
+unbound first.
+
+### What this does and does not establish
+
+| claim | evidence |
+|---|---|
+| The agent never binds to a revision storage contradicts | **Verified externally**, against MySQL, at 83 instants |
+| An unbound read always collapses the class | **Property-tested** over generated mixes, not chosen examples |
+| Both payload shapes yield identical facts | **Property-tested** — the invariant the two-path design rests on |
+| A refusal never proposes destructive DDL | **Property-tested** |
+| `resolve_at` alone is always correct | **False, and known false.** See above; contained by fact-matching |
+| The suite can detect wrongness in general | **Not established.** Mutation testing is not yet running — mutmut's sandbox conflicts with this repo's test layout |
+| Behaviour under a real concurrent write | **Not established.** The race is asserted synthetically, never induced |
+
+The last two are the honest gaps. They are specific rather than vague, which is the most useful
+thing to be able to say about what you have not proved.
+
+## Ablation
+
+Remove one captured field at a time and see what the certifier can still claim. An entry that
+cannot show which part of its own record is load-bearing has not demonstrated that the record is
+necessary. Reproduce with `pytest tests/test_ablation.py -s`.
+
+```
+removed                        class still available
+(none — full record)           C2
+execution.pure                 none
+predicate.id                   C0
+policy.resolved_value          C0
+candidates.completeness        C1
+policy.resolution.revision     C2
+read binding (unbound read)    none
+```
+
+The fifth row is the one worth reporting, and it is not flattering: **deleting the revision from
+the record costs nothing.** The underlying verifier has no concept of a DataHub aspect version,
+so a record carrying a revision and a record missing one certify identically. The revision in the
+record is documentation for whoever reads it later. It is not evidence, and it does not defend
+itself.
+
+What is load-bearing is the last row — the binding. A read that could not be tied to a revision
+collapses the class to none. So this project's contribution to soundness is the *refusal*: the
+value is in declining to certify a decision whose world cannot be named, not in annotating a
+record with a version string. Both results are pinned by tests, so if the upstream verifier ever
+starts checking the revision, this section is what breaks.
+
 ## Why the coordinate has to be recovered
 
 DataHub the platform maintains this coordinate already — versioned aspects keyed by version
@@ -252,7 +302,97 @@ agreed the coordinate belongs on the agent's surface. The workaround was always 
 being there yet, and the ablation already reports which half was load-bearing — the refusal, not
 the annotation.
 
+## As a CI gate, not only a CLI
+
+A certificate printed by a CLI is read once, by the person who ran it. A certificate that arrives
+as an annotation on a pull request is read by whoever is about to merge — the moment it can still
+change something. That is the second design law doing work: *a record nobody keeps certifies
+nothing.*
+
+```bash
+python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
+```
+
+**This is not a description of what would happen.** It runs on
+[pull request #1](https://github.com/Laolex/datahub-decision-records/pull/1) of this repository,
+where the certificate arrives as a code-scanning annotation on `pipelines/orders.sql`:
+
+```
+dhdr/decision-certified | pipelines/orders.sql | Capability class: C2
+```
+
+The workflow is [`.github/workflows/dhdr-gate.yml`](.github/workflows/dhdr-gate.yml), and it
+states its own limit at the top: producing a certificate needs a live DataHub to read revisions
+from, which a hosted runner has none of. With `DATAHUB_GMS_URL` configured it generates one in
+CI; otherwise it uploads `examples/decision.sarif.json`, produced against a live DataHub Core
+v1.5.0.6 and committed. Either way the annotation on that PR is a real certificate from a real
+decision — what the fallback does not prove is that CI reached DataHub.
+
+The output is SARIF 2.1.0 ([`examples/decision.sarif.json`](examples/decision.sarif.json)), which
+any code host ingests. SARIF's `level` is ordinal — `none`, `note`, `warning`, `error` — so the
+capability classes map onto it directly and nobody has to invent a percentage on the way:
+
+| class | level |
+|---|---|
+| C0, C1 | `note` |
+| C2 | `warning` |
+| C3 | `error` |
+| unsound (any unbound read) | `warning`, or `error` under `--strict` |
+
+Note that last row. **Unsoundness fails open by default.** A gate that blocks a merge because of
+a gap in its own instrumentation gets uninstalled inside a week, and an uninstalled gate
+certifies nothing at all. `--strict` fails closed for teams that have decided they want that, and
+only then does the command exit non-zero.
+
+## Upstream
+
+Two findings from this build were filed back, both reproducible on DataHub Core v1.5.0.6:
+
+- [acryldata/mcp-server-datahub#181](https://github.com/acryldata/mcp-server-datahub/issues/181)
+  — an optional point-in-time parameter for context reads. No read tool accepts a version or
+  timestamp, and no shipped GraphQL selection requests `systemMetadata`, so a read resolves to
+  *now* and the response carries nothing that dates it. The proposal defaults to current so
+  nothing breaks, with a smaller fallback (echo the resolved version in responses) that needs no
+  time travel at all. This is the gap the whole project works around.
+- [datahub-project/datahub#18851](https://github.com/datahub-project/datahub/issues/18851), fixed by
+  **[PR #18869](https://github.com/datahub-project/datahub/pull/18869)**
+  — `institutionalMemory` has no registered patch template, so `PATCH` fails with a null-template
+  `NullPointerException`. Eight other dataset aspects handle the same request, so it is a
+  per-aspect gap. This is the reason write-back here is read-append-write rather than an atomic
+  append — so rather than only report it, the PR adds `InstitutionalMemoryTemplate` following the
+  existing `GlobalTagsTemplate` pattern, with a test for the two-writers case that motivated it.
+
+## Running it
+
+From a running DataHub instance to a certified decision, in one command:
+
+```bash
+pip install -e '.[dev]'
+python scripts/quickstart.py
+```
+
+It checks the instance, ingests DataHub's `showcase-ecommerce` datasets if they are not already
+there, verifies the one setting this depends on, and runs the demo. Safe to re-run.
+
+**Starting DataHub is the one step it does not do for you** — that is `docker compose up` in
+DataHub's own quickstart, and guessing at your compose file would be worse than asking. Copy
+[`quickstart/docker-compose.override.yml`](quickstart/docker-compose.override.yml) next to it
+first; it sets the one required setting and closes a security hole in the stock compose file
+(every service, including an unauthenticated OpenSearch, is published on `0.0.0.0`).
+
+The one required setting, if you would rather apply it by hand: **`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`**
+on GMS. Its shipped default is a day, and MCP `get_lineage` reads through that cache — so a
+lineage change reaches the graph index in seconds and stays invisible to the agent for hours,
+and the demonstration times out rather than passing on stale context.
+
+Expect the DataHub bring-up itself to dominate the wall clock on a cold machine; everything after
+it is seconds.
+
 ## Running the tests
+
+The integration tests **mutate lineage on the instance**, because demonstrating that a decision
+flips requires the world to actually move. Two suites running against the same DataHub at once
+will fight over that state and produce a spurious failure. One suite per instance.
 
 Requires a live DataHub Core instance for the integration tests. `DATAHUB_GMS_URL` says where it
 is — the same variable the DataHub SDK and MCP server read — and defaults to `localhost:8080`.
@@ -310,7 +450,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-65 tests: 33 run with no DataHub at all, 32 need a live instance. The ones worth knowing about:
+76 tests: 41 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,
@@ -325,95 +465,6 @@ Note that the flip test needs GMS's lineage cache disabled
 (`CACHE_SEARCH_LINEAGE_TTL_SECONDS=0`). With the shipped default a lineage change reaches the
 graph index in seconds but stays invisible to `get_lineage` for hours, and the test times out
 rather than passing on stale context.
-
-## As a CI gate, not only a CLI
-
-A certificate printed by a CLI is read once, by the person who ran it. A certificate that arrives
-as an annotation on a pull request is read by whoever is about to merge — the moment it can still
-change something. That is the second design law doing work: *a record nobody keeps certifies
-nothing.*
-
-```bash
-python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
-```
-
-**This is not a description of what would happen.** It runs on
-[pull request #1](https://github.com/Laolex/datahub-decision-records/pull/1) of this repository,
-where the certificate arrives as a code-scanning annotation on `pipelines/orders.sql`:
-
-```
-dhdr/decision-certified | pipelines/orders.sql | Capability class: C2
-```
-
-The workflow is [`.github/workflows/dhdr-gate.yml`](.github/workflows/dhdr-gate.yml), and it
-states its own limit at the top: producing a certificate needs a live DataHub to read revisions
-from, which a hosted runner has none of. With `DATAHUB_GMS_URL` configured it generates one in
-CI; otherwise it uploads `examples/decision.sarif.json`, produced against a live DataHub Core
-v1.5.0.6 and committed. Either way the annotation on that PR is a real certificate from a real
-decision — what the fallback does not prove is that CI reached DataHub.
-
-The output is SARIF 2.1.0 ([`examples/decision.sarif.json`](examples/decision.sarif.json)), which
-any code host ingests. SARIF's `level` is ordinal — `none`, `note`, `warning`, `error` — so the
-capability classes map onto it directly and nobody has to invent a percentage on the way:
-
-| class | level |
-|---|---|
-| C0, C1 | `note` |
-| C2 | `warning` |
-| C3 | `error` |
-| unsound (any unbound read) | `warning`, or `error` under `--strict` |
-
-Note that last row. **Unsoundness fails open by default.** A gate that blocks a merge because of
-a gap in its own instrumentation gets uninstalled inside a week, and an uninstalled gate
-certifies nothing at all. `--strict` fails closed for teams that have decided they want that, and
-only then does the command exit non-zero.
-
-## Ablation
-
-Remove one captured field at a time and see what the certifier can still claim. An entry that
-cannot show which part of its own record is load-bearing has not demonstrated that the record is
-necessary. Reproduce with `pytest tests/test_ablation.py -s`.
-
-```
-removed                        class still available
-(none — full record)           C2
-execution.pure                 none
-predicate.id                   C0
-policy.resolved_value          C0
-candidates.completeness        C1
-policy.resolution.revision     C2
-read binding (unbound read)    none
-```
-
-The fifth row is the one worth reporting, and it is not flattering: **deleting the revision from
-the record costs nothing.** The underlying verifier has no concept of a DataHub aspect version,
-so a record carrying a revision and a record missing one certify identically. The revision in the
-record is documentation for whoever reads it later. It is not evidence, and it does not defend
-itself.
-
-What is load-bearing is the last row — the binding. A read that could not be tied to a revision
-collapses the class to none. So this project's contribution to soundness is the *refusal*: the
-value is in declining to certify a decision whose world cannot be named, not in annotating a
-record with a version string. Both results are pinned by tests, so if the upstream verifier ever
-starts checking the revision, this section is what breaks.
-
-## Upstream
-
-Two findings from this build were filed back, both reproducible on DataHub Core v1.5.0.6:
-
-- [acryldata/mcp-server-datahub#181](https://github.com/acryldata/mcp-server-datahub/issues/181)
-  — an optional point-in-time parameter for context reads. No read tool accepts a version or
-  timestamp, and no shipped GraphQL selection requests `systemMetadata`, so a read resolves to
-  *now* and the response carries nothing that dates it. The proposal defaults to current so
-  nothing breaks, with a smaller fallback (echo the resolved version in responses) that needs no
-  time travel at all. This is the gap the whole project works around.
-- [datahub-project/datahub#18851](https://github.com/datahub-project/datahub/issues/18851), fixed by
-  **[PR #18869](https://github.com/datahub-project/datahub/pull/18869)**
-  — `institutionalMemory` has no registered patch template, so `PATCH` fails with a null-template
-  `NullPointerException`. Eight other dataset aspects handle the same request, so it is a
-  per-aspect gap. This is the reason write-back here is read-append-write rather than an atomic
-  append — so rather than only report it, the PR adds `InstitutionalMemoryTemplate` following the
-  existing `GlobalTagsTemplate` pattern, with a test for the two-writers case that motivated it.
 
 ## Reproduce
 
