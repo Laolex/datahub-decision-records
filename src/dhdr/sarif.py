@@ -84,6 +84,7 @@ def to_sarif(
     cert: Certificate,
     *,
     path: str,
+    line: int = 1,
     strict: bool = False,
     outcome: str | None = None,
     revision: int | None = None,
@@ -97,6 +98,11 @@ def to_sarif(
     class is a grade with no subject. When supplied, the message leads with what
     was decided, about which dataset, against which revision, and the change
     being proposed.
+
+    `line` places the annotation. Code hosts render a result inline only when it
+    falls on a line the diff touches, so pointing at the line under decision is
+    what puts the certificate in front of the reviewer rather than in a tab they
+    would have to go looking for.
     """
     unsound = cert.cls is None or bool(cert.unbound_reads)
 
@@ -132,7 +138,7 @@ def to_sarif(
                             {
                                 "physicalLocation": {
                                     "artifactLocation": {"uri": path},
-                                    "region": {"startLine": 1},
+                                    "region": {"startLine": line},
                                 }
                             }
                         ],

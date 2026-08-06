@@ -43,17 +43,36 @@ jobs:
       - name: Negative control (the refusal must still hold)
         run: python scripts/negative_control.py
 
+      # A code host renders a code-scanning result inline only when it sits on a
+      # line the diff touches. Anywhere else and the certificate is filed in a
+      # tab the reviewer never opens, which defeats the point of putting it here.
+      - name: Locate the line under decision
+        id: line
+        run: |
+          n=$(awk '/^SELECT$/{s=1;next} s&&/promo_code/{print NR; exit}' pipelines/orders.sql)
+          test -n "$n" || { echo "promo_code is not selected; nothing to annotate"; exit 1; }
+          echo "line=$n" >> "$GITHUB_OUTPUT"
+
       - name: Produce the certificate
         env:
           DATAHUB_GMS_URL: ${{ vars.DATAHUB_GMS_URL }}
+          LINE: ${{ steps.line.outputs.line }}
         run: |
           if [ -n "$DATAHUB_GMS_URL" ]; then
             echo "Generating a certificate against $DATAHUB_GMS_URL"
-            python -m dhdr.cli sarif --path pipelines/orders.sql > dhdr.sarif
+            python -m dhdr.cli sarif --path pipelines/orders.sql --line "$LINE" > dhdr.sarif
           else
             echo "No DATAHUB_GMS_URL configured; uploading the committed certificate."
             echo "See examples/demo-transcript.txt for the run that produced it."
-            cp examples/decision.sarif.json dhdr.sarif
+            python - "$LINE" <<'PY'
+          import json, sys
+          doc = json.load(open("examples/decision.sarif.json"))
+          # Re-point the committed certificate at this branch's line. The content
+          # of the decision is unchanged; only where the annotation lands moves.
+          for result in doc["runs"][0]["results"]:
+              result["locations"][0]["physicalLocation"]["region"]["startLine"] = int(sys.argv[1])
+          json.dump(doc, open("dhdr.sarif", "w"), indent=2)
+          PY
           fi
           python -c "import json,sys; d=json.load(open('dhdr.sarif')); r=d['runs'][0]['results'][0]; print('level:', r['level']); print(r['message']['text'])"
 

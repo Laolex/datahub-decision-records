@@ -121,9 +121,31 @@ it was made against.</p>
 
 <!-- begin:demo-transcript.txt -->
 <pre>
+TIMELINE — one agent, one question, asked twice
+
+  #0  Read downstream lineage for b2fd91.order_entry_db.order_entry.orders — through the real MCP server
+  #1  Bound that read to upstreamLineage v941 (lastObserved=1786026377925)
+  #2  Certified C2 — every deciding read named a revision
+  #3  DECISION: admit — nothing reads promo_code at v941
+  #4  Proposed, NOT applied: DROP COLUMN promo_code
+
+  ···  the world moves: a pipeline change rewires who reads b2fd91.order_entry_db.order_entry.orders
+
+  #5  The identical call, seconds later, same MCP server — b2fd91.order_entry_db.order_entry.orders
+  #6  Bound that read to upstreamLineage v942 (lastObserved=1786026380223)
+  #7  Certified C2 — every deciding read named a revision
+  #8  DECISION: reject — a consumer reads promo_code at v942
+  #9  Proposed, NOT applied: DROP COLUMN promo_code
+
+  Same agent. Same call. Opposite decisions.
+  Neither log can tell you which world it was made in. Both certificates can.
+
+
+CERTIFICATES
+
 === as the agent saw it ===
 outcome:  admit
-revision: v661  (lastObserved=1785915068664)
+revision: v941  (lastObserved=1786026377925)
 Capability class: C2
 proposed change:
   -- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.
@@ -132,15 +154,12 @@ proposed change:
 
 === as it actually was ===
 outcome:  reject
-revision: v662  (lastObserved=1785915071597)
+revision: v942  (lastObserved=1786026380223)
 Capability class: C2
 proposed change:
   -- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.
   -- proposed — not applied by dhdr
-  COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS &#x27;deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed&#x27;;
-
-Same agent. Same call, through the real MCP server. Opposite decisions.
-The log cannot tell you which world it was made in. The certificate can.</pre>
+  COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS &#x27;deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed&#x27;;</pre>
 <!-- end:demo-transcript.txt -->
 
 <p>Both certificates say <code>C2</code>, so both decisions are sound. That is the point: neither
@@ -157,14 +176,14 @@ the world is moved between two live reads instead.</p>
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      admit
-revision:     v659
+revision:     v939
 Capability class: C2
 
 === consumer wired up ===
 tool:         get_lineage (via mcp-server-datahub)
 value_source: mcp
 outcome:      reject
-revision:     v660
+revision:     v940
 Capability class: C2
 
 The agent made the identical MCP call both times.
@@ -209,18 +228,18 @@ rerunning anything.</p>
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785915053351
+        &quot;time&quot;: 1786026360741
       },
-      &quot;description&quot;: &quot;decision=admit against v657 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785915053351.json&quot;
+      &quot;description&quot;: &quot;decision=admit against v937 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1786026360741.json&quot;
     },
     {
       &quot;createStamp&quot;: {
         &quot;actor&quot;: &quot;urn:li:corpuser:datahub&quot;,
-        &quot;time&quot;: 1785915058403
+        &quot;time&quot;: 1786026366051
       },
-      &quot;description&quot;: &quot;decision=reject against v658 \u2014 class C2&quot;,
-      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1785915058403.json&quot;
+      &quot;description&quot;: &quot;decision=reject against v938 \u2014 class C2&quot;,
+      &quot;url&quot;: &quot;https://laolex.github.io/datahub-decision-records/certs/1786026366051.json&quot;
     }
   ]
 }</pre>
@@ -290,11 +309,11 @@ the annotation. Both results are pinned by tests.</p>
     &quot;type&quot;: &quot;int&quot;,
     &quot;value&quot;: 0
   },
-  &quot;decision_id&quot;: &quot;d-efe503ef08e3&quot;,
+  &quot;decision_id&quot;: &quot;d-6a1094342393&quot;,
   &quot;execution&quot;: {
     &quot;clock&quot;: null,
-    &quot;deps_digest&quot;: &quot;sha256:ae757cf0b9572f9412f4e9749de20df21740e2e861f31c0afe40c5949c5a88f2&quot;,
-    &quot;path_digest&quot;: &quot;sha256:7fc6113230ff8469bc8908c27ae27a40fce1d67723e7449da53ad7e54c589d7d&quot;,
+    &quot;deps_digest&quot;: &quot;sha256:ffc12a86aaf4dee008f1ed48594ceb5aaf17fe51e99379b8dc40ee78736e843b&quot;,
+    &quot;path_digest&quot;: &quot;sha256:b40f716c6efb58b49797f8056cdf40c59220d7105a01787f0df8dfb08ec5bf17&quot;,
     &quot;pure&quot;: true,
     &quot;runtime&quot;: &quot;python3.12.3&quot;,
     &quot;seed&quot;: null
@@ -304,7 +323,7 @@ the annotation. Both results are pinned by tests.</p>
     &quot;key&quot;: &quot;max_safe_consumers&quot;,
     &quot;resolution&quot;: {
       &quot;provenance&quot;: &quot;bundled&quot;,
-      &quot;revision&quot;: &quot;655&quot;,
+      &quot;revision&quot;: &quot;935&quot;,
       &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage&quot;
     },
     &quot;resolved_value&quot;: 0
@@ -318,13 +337,13 @@ the annotation. Both results are pinned by tests.</p>
   &quot;reads&quot;: [
     {
       &quot;key&quot;: &quot;downstream_consumers&quot;,
-      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v655&quot;,
+      &quot;source&quot;: &quot;datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v935&quot;,
       &quot;value_digest&quot;: &quot;sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9&quot;
     }
   ],
   &quot;run_id&quot;: &quot;example-then&quot;,
   &quot;sequence&quot;: 0,
-  &quot;ts&quot;: &quot;2026-08-05T07:30:50.363359+00:00&quot;,
+  &quot;ts&quot;: &quot;2026-08-06T14:25:52.811192+00:00&quot;,
   &quot;writes&quot;: []
 }</pre>
 <!-- end:record-then.json -->

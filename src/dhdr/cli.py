@@ -359,6 +359,7 @@ def _sarif(args: argparse.Namespace) -> int:
         to_sarif(
             cert,
             path=args.path,
+            line=args.line,
             strict=args.strict,
             outcome=decision.outcome,
             revision=decision.revision,
@@ -523,6 +524,12 @@ def main(argv: list[str] | None = None) -> int:
     sarif = sub.add_parser("sarif", help="emit the certificate as SARIF 2.1.0")
     sarif.add_argument(
         "--path", default="scenarios/schema_ops.py", help="artifact URI to annotate"
+    )
+    sarif.add_argument(
+        "--line",
+        type=int,
+        default=1,
+        help="line to annotate; must be a line the diff touches to render inline",
     )
     sarif.add_argument(
         "--strict",

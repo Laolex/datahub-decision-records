@@ -42,7 +42,7 @@
           "ruleId": "dhdr/decision-certified",
           "level": "warning",
           "message": {
-            "text": "Decision: reject against b2fd91.order_entry_db.analytics.order_history at revision v700\nProposed: COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';\n\nCapability class: C2"
+            "text": "Decision: reject against b2fd91.order_entry_db.analytics.order_history at revision v944\nProposed: COMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';\n\nCapability class: C2"
           },
           "locations": [
             {
@@ -51,7 +51,7 @@
                   "uri": "pipelines/orders.sql"
                 },
                 "region": {
-                  "startLine": 1
+                  "startLine": 18
                 }
               }
             }

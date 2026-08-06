@@ -23,6 +23,26 @@ def test_unsound_fails_open_by_default_and_closed_under_strict():
     assert _result(unsound, strict=True)["level"] == "error"
 
 
+def test_the_annotation_can_be_placed_on_the_line_being_decided():
+    """An annotation only renders inline if it sits on a line the diff touches.
+
+    Code hosts show code-scanning results against changed lines. Pinning every
+    result to line 1 means that on any pull request whose change is further down
+    the file — which is most of them — the certificate exists but is invisible
+    where the merge decision is made. That is the one place this project claims
+    it belongs.
+    """
+    region = to_sarif(Certificate("C2", True), path="pipelines/orders.sql", line=15)
+    region = region["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["region"]
+    assert region["startLine"] == 15
+
+
+def test_the_annotation_defaults_to_the_top_of_the_file():
+    doc = to_sarif(Certificate("C2", True), path="a.py")
+    region = doc["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["region"]
+    assert region["startLine"] == 1
+
+
 def test_no_percentage_anywhere():
     assert "%" not in json.dumps(to_sarif(Certificate("C2", True), path="a.py"))
 

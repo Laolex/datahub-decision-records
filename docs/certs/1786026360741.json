@@ -1,8 +1,8 @@
 {
   "outcome": "admit",
-  "revision": 823,
-  "aspect_last_observed_ms": 1785971715188,
-  "decided_at_ms": 1785971717382,
+  "revision": 937,
+  "aspect_last_observed_ms": 1786026353091,
+  "decided_at_ms": 1786026360741,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [],
@@ -10,10 +10,10 @@
   "proposed_change": "-- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.\n-- proposed \u2014 not applied by dhdr\nALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-88cd0130d10f",
+    "decision_id": "d-87c83a6f0a34",
     "run_id": "live-before",
     "sequence": 0,
-    "ts": "2026-08-05T23:15:17.518579+00:00",
+    "ts": "2026-08-06T14:26:00.880592+00:00",
     "outcome": "admit",
     "action": {
       "id": "drop_column",
@@ -40,14 +40,14 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v823"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v937"
       }
     ],
     "writes": [],
     "execution": {
       "runtime": "python3.12.3",
-      "deps_digest": "sha256:8a9832fd1f3f58eef7d8e79bd04a58388087a78f4ff2611c8cae674324f995b9",
-      "path_digest": "sha256:dcd90d9ffa838fbbf522dcbb2f18b2aca20248f61902e5de62bea2c30162010a",
+      "deps_digest": "sha256:ffc12a86aaf4dee008f1ed48594ceb5aaf17fe51e99379b8dc40ee78736e843b",
+      "path_digest": "sha256:b40f716c6efb58b49797f8056cdf40c59220d7105a01787f0df8dfb08ec5bf17",
       "seed": null,
       "clock": null,
       "pure": true
@@ -71,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "823"
+        "revision": "937"
       }
     }
   }

@@ -3,18 +3,18 @@
     {
       "createStamp": {
         "actor": "urn:li:corpuser:datahub",
-        "time": 1785915053351
+        "time": 1786026360741
       },
-      "description": "decision=admit against v657 \u2014 class C2",
-      "url": "https://laolex.github.io/datahub-decision-records/certs/1785915053351.json"
+      "description": "decision=admit against v937 \u2014 class C2",
+      "url": "https://laolex.github.io/datahub-decision-records/certs/1786026360741.json"
     },
     {
       "createStamp": {
         "actor": "urn:li:corpuser:datahub",
-        "time": 1785915058403
+        "time": 1786026366051
       },
-      "description": "decision=reject against v658 \u2014 class C2",
-      "url": "https://laolex.github.io/datahub-decision-records/certs/1785915058403.json"
+      "description": "decision=reject against v938 \u2014 class C2",
+      "url": "https://laolex.github.io/datahub-decision-records/certs/1786026366051.json"
     }
   ]
 }

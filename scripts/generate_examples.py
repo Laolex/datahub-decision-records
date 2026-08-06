@@ -38,6 +38,25 @@ HOSTED = REPO / "docs" / "index.html"
 CERTS = REPO / "docs" / "certs"
 
 
+def _decided_line(path: str, needle: str) -> int:
+    """Find the line the decision is actually about.
+
+    A code host renders a code-scanning result inline only when it falls on a
+    line the diff touches, so a hardcoded line 1 puts the certificate somewhere
+    the reviewer never looks. Locating it by content keeps the annotation on the
+    right line when the file is edited.
+    """
+    in_select = False
+    for number, text in enumerate((REPO / path).read_text().splitlines(), start=1):
+        if text.strip() == "SELECT":
+            in_select = True
+        elif in_select and needle in text:
+            # Matches on both sides of the change: `promo_code,` on main, and the
+            # commented-out form on the branch that proposes removing it.
+            return number
+    raise SystemExit(f"{needle!r} is no longer selected in {path}; the gate would annotate nothing")
+
+
 def _capture(args: list[str]) -> str:
     import subprocess
 
@@ -214,7 +233,11 @@ def main() -> int:
     # to name the decision, so the README described an artifact that no longer
     # matched the one on the pull request.
     (EXAMPLES / "decision.sarif.json").write_text(
-        _capture(["-m", "dhdr.cli", "sarif", "--path", "pipelines/orders.sql"])
+        _capture([
+            "-m", "dhdr.cli", "sarif",
+            "--path", "pipelines/orders.sql",
+            "--line", str(_decided_line("pipelines/orders.sql", "promo_code")),
+        ])
     )
 
     (EXAMPLES / "ablation.txt").write_text(

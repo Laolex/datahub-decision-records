@@ -1,8 +1,8 @@
 {
   "outcome": "reject",
-  "revision": 806,
-  "aspect_last_observed_ms": 1785971569850,
-  "decided_at_ms": 1785971575460,
+  "revision": 938,
+  "aspect_last_observed_ms": 1786026360954,
+  "decided_at_ms": 1786026366051,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [],
@@ -10,10 +10,10 @@
   "proposed_change": "-- b2fd91.order_entry_db.analytics.order_history still reads b2fd91.order_entry_db.order_entry.orders at the bound revision, so the drop is refused and deprecation proposed instead.\n-- proposed \u2014 not applied by dhdr\nCOMMENT ON COLUMN b2fd91.order_entry_db.order_entry.orders.promo_code IS 'deprecated: still read by b2fd91.order_entry_db.analytics.order_history; do not drop until that dependency is removed';",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-fc5b83c89f5b",
+    "decision_id": "d-17efc32cb524",
     "run_id": "live-after",
     "sequence": 0,
-    "ts": "2026-08-05T23:12:55.662727+00:00",
+    "ts": "2026-08-06T14:26:06.189383+00:00",
     "outcome": "reject",
     "action": {
       "id": "drop_column",
@@ -40,14 +40,14 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v806"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v938"
       }
     ],
     "writes": [],
     "execution": {
       "runtime": "python3.12.3",
-      "deps_digest": "sha256:8a9832fd1f3f58eef7d8e79bd04a58388087a78f4ff2611c8cae674324f995b9",
-      "path_digest": "sha256:dcd90d9ffa838fbbf522dcbb2f18b2aca20248f61902e5de62bea2c30162010a",
+      "deps_digest": "sha256:ffc12a86aaf4dee008f1ed48594ceb5aaf17fe51e99379b8dc40ee78736e843b",
+      "path_digest": "sha256:b40f716c6efb58b49797f8056cdf40c59220d7105a01787f0df8dfb08ec5bf17",
       "seed": null,
       "clock": null,
       "pure": true
@@ -71,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "806"
+        "revision": "938"
       }
     }
   }

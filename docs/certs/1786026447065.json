@@ -1,8 +1,8 @@
 {
   "outcome": "admit",
-  "revision": 911,
-  "aspect_last_observed_ms": 1786008265146,
-  "decided_at_ms": 1786008267395,
+  "revision": 949,
+  "aspect_last_observed_ms": 1786026445247,
+  "decided_at_ms": 1786026447065,
   "capability_class": "C2",
   "satisfied": true,
   "missing": [],
@@ -10,10 +10,10 @@
   "proposed_change": "-- No downstream consumer reads b2fd91.order_entry_db.order_entry.orders.promo_code at the bound revision.\n-- proposed \u2014 not applied by dhdr\nALTER TABLE b2fd91.order_entry_db.order_entry.orders DROP COLUMN promo_code;",
   "record": {
     "rcdr_version": "0.1",
-    "decision_id": "d-45969dc89644",
+    "decision_id": "d-142ded3310de",
     "run_id": "live-before",
     "sequence": 0,
-    "ts": "2026-08-06T09:24:27.493832+00:00",
+    "ts": "2026-08-06T14:27:27.223395+00:00",
     "outcome": "admit",
     "action": {
       "id": "drop_column",
@@ -40,7 +40,7 @@
       {
         "key": "downstream_consumers",
         "value_digest": "sha256:5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
-        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v911"
+        "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage@v949"
       }
     ],
     "writes": [],
@@ -71,7 +71,7 @@
       "resolution": {
         "provenance": "bundled",
         "source": "datahub:urn:li:dataset:(urn:li:dataPlatform:snowflake,b2fd91.order_entry_db.analytics.order_history,PROD)#upstreamlineage",
-        "revision": "911"
+        "revision": "949"
       }
     }
   }

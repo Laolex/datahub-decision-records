@@ -1,4 +1,4 @@
-# then: admit against aspect revision v655
-# lastObserved=1785915043167
+# then: admit against aspect revision v935
+# lastObserved=1786026345561
 
 Capability class: C2
