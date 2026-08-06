@@ -14,6 +14,6 @@ SELECT
     order_id,
     customer_id,
     order_total,
-    -- promo_code,          <- proposed for removal
+    promo_code,
     created_at
 FROM order_entry.orders;
