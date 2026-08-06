@@ -17,7 +17,7 @@ dependencies = [
 license = { text = "Apache-2.0" }
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "hypothesis>=6.0"]
 
 [project.scripts]
 dhdr = "dhdr.cli:main"
@@ -33,7 +33,3 @@ where = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = ["integration: needs a live DataHub at localhost:8080"]
-
-["src/dhdr/"]
-tests_dir = ["tests/"]
-runner = "env PYTHONPATH=/opt/datahub-decision-records DATAHUB_GMS_URL=http://localhost:9 /opt/datahub-probe-venv/bin/python -m pytest -x -q -p no:cacheprovider tests/test_certify.py tests/test_sarif.py tests/test_properties.py tests/test_ablation.py"
