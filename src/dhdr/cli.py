@@ -291,11 +291,11 @@ def reset_institutional_memory(urn: str, base_url: str | None = None) -> None:
     at. Off by default; the demo takes `--reset` because wiping institutional
     memory is not something to do silently.
     """
-    import requests
+    from .coordinate import entity_type_of, session
 
     base_url = base_url or DEFAULT_BASE_URL_MARKER()
-    requests.post(
-        f"{base_url}/openapi/v3/entity/dataset",
+    session().post(
+        f"{base_url}/openapi/v3/entity/{entity_type_of(urn)}",
         json=[{"urn": urn, "institutionalMemory": {"value": {"elements": []}}}],
         params={"async": "false"},
         timeout=30,

@@ -32,15 +32,18 @@ Registering an `institutionalMemory` patch template upstream is what would
 actually fix it, which is why it is the upstream contribution in Task 7b.
 """
 
+import time
 import urllib.parse
 
-import requests
-
 from .certify import Certificate
-from .coordinate import default_base_url
+from .coordinate import default_base_url, entity_type_of, session
 
 ACTOR = "urn:li:corpuser:datahub"
 MAX_ATTEMPTS = 5
+#: Base for the exponential backoff between attempts. Retrying a contended write
+#: immediately is how a retry loop becomes the contention it is retrying past:
+#: every loser re-reads and re-writes in lockstep with every other loser.
+RETRY_BACKOFF_S = 0.1
 
 
 def _certificate_line(cert: Certificate, outcome: str, revision: int | None) -> str:
@@ -54,7 +57,7 @@ def _certificate_line(cert: Certificate, outcome: str, revision: int | None) -> 
 def _aspect_url(urn: str, base_url: str | None = None) -> str:
     base_url = base_url or default_base_url()
     enc = urllib.parse.quote(urn, safe="")
-    return f"{base_url}/openapi/v3/entity/dataset/{enc}/institutionalMemory"
+    return f"{base_url}/openapi/v3/entity/{entity_type_of(urn)}/{enc}/institutionalMemory"
 
 
 def _read_with_version(urn: str, *, base_url: str | None = None) -> dict:
@@ -65,7 +68,7 @@ def _read_with_version(urn: str, *, base_url: str | None = None) -> dict:
     `SystemMetadata` — and code that treats a 4xx here as "nothing published"
     would drop every existing element on the next write.
     """
-    response = requests.get(
+    response = session().get(
         _aspect_url(urn, base_url), params={"systemMetadata": "true"}, timeout=30
     )
     if response.status_code == 404:
@@ -78,7 +81,7 @@ def _read_with_version(urn: str, *, base_url: str | None = None) -> dict:
 
 def read_published(urn: str, *, base_url: str | None = None) -> dict | None:
     """What a later reader inherits. None when nothing was ever published."""
-    response = requests.get(_aspect_url(urn, base_url), timeout=30)
+    response = session().get(_aspect_url(urn, base_url), timeout=30)
     if response.status_code == 404:
         return None
     response.raise_for_status()
@@ -124,7 +127,9 @@ def publish_certificate(
         "createStamp": {"time": decided_at_ms, "actor": ACTOR},
     }
 
-    for _ in range(MAX_ATTEMPTS):
+    for attempt in range(MAX_ATTEMPTS):
+        if attempt:
+            time.sleep(RETRY_BACKOFF_S * 2 ** (attempt - 1))
         current = _read_with_version(urn, base_url=base_url)
         elements = [
             e
@@ -133,8 +138,8 @@ def publish_certificate(
         ]
         elements.append(element)
 
-        response = requests.post(
-            f"{base_url}/openapi/v3/entity/dataset",
+        response = session().post(
+            f"{base_url}/openapi/v3/entity/{entity_type_of(urn)}",
             json=[{"urn": urn, "institutionalMemory": {"value": {"elements": elements}}}],
             params={"async": "false"},
             headers={"Content-Type": "application/json"},

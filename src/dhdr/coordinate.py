@@ -17,7 +17,9 @@ from dataclasses import dataclass
 import requests
 
 GMS_URL_ENV_VAR = "DATAHUB_GMS_URL"
+GMS_TOKEN_ENV_VAR = "DATAHUB_GMS_TOKEN"
 FALLBACK_BASE_URL = "http://localhost:8080"
+DEFAULT_ENTITY_TYPE = "dataset"
 
 
 def default_base_url() -> str:
@@ -36,6 +38,59 @@ def default_base_url() -> str:
 #: Import-time snapshot. Kept because it reads well in messages and tests, but
 #: never use it as a default argument — see `default_base_url()`.
 DEFAULT_BASE_URL = default_base_url()
+
+
+def default_token() -> str | None:
+    """The personal access token, or None on an instance that wants none.
+
+    `DATAHUB_GMS_TOKEN` is the variable the DataHub SDK and MCP server already
+    read, so an instance configured for either is configured for this. Resolved
+    when asked for, never bound at import, for the same reason as the base URL.
+    """
+    return os.environ.get(GMS_TOKEN_ENV_VAR) or None
+
+
+_session: requests.Session | None = None
+_session_token: str | None = None
+
+
+def session() -> requests.Session:
+    """The shared HTTP session, carrying the token when there is one.
+
+    A session rather than bare `requests.get` for two reasons. It is where the
+    `Authorization` header lives, so no call site can forget it — an
+    auth-enabled instance 401s on the read *and* the write, and a partially
+    authenticated client fails in the least legible way available. And it keeps
+    the connection open across the revision walk, which is the hot path: binding
+    one read costs one GET per retained revision of the aspect.
+
+    Rebuilt when the token changes so that setting the variable at runtime takes
+    effect, rather than freezing whatever the environment held at import.
+    """
+    global _session, _session_token
+    token = default_token()
+    if _session is None or _session_token != token:
+        fresh = requests.Session()
+        if token:
+            fresh.headers["Authorization"] = f"Bearer {token}"
+        _session, _session_token = fresh, token
+    return _session
+
+
+def entity_type_of(urn: str) -> str:
+    """The entity type encoded in the URN — `urn:li:dashboard:(…)` -> `dashboard`.
+
+    Derived rather than configured. The aspect endpoints are per entity type,
+    and hardcoding `dataset` does not fail loudly on a dashboard or a dataJob:
+    the GET 404s, `history()` reads that as "no revisions" and returns empty,
+    every read binds to nothing, and the certificate reports `none`. That is the
+    right refusal for entirely the wrong reason — indistinguishable, to a
+    reader, from metadata that genuinely could not be dated.
+    """
+    parts = urn.split(":", 3)
+    if len(parts) >= 3 and parts[0] == "urn" and parts[1] == "li" and parts[2]:
+        return parts[2]
+    return DEFAULT_ENTITY_TYPE
 
 
 @dataclass(frozen=True)
@@ -67,8 +122,8 @@ def read_aspect(
     """
     base_url = base_url or default_base_url()
     enc = urllib.parse.quote(urn, safe="")
-    response = requests.get(
-        f"{base_url}/openapi/v3/entity/dataset/{enc}/{aspect.lower()}",
+    response = session().get(
+        f"{base_url}/openapi/v3/entity/{entity_type_of(urn)}/{enc}/{aspect.lower()}",
         params={"version": version, "systemMetadata": "true"},
         timeout=30,
     )

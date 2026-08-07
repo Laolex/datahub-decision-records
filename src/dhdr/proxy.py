@@ -14,7 +14,13 @@ and is passed in rather than hardcoded here.
 import time
 from dataclasses import dataclass, field
 
-from .coordinate import bind_revision, default_base_url, read_aspect, resolve_at
+from .coordinate import (
+    bind_revision,
+    default_base_url,
+    default_token,
+    read_aspect,
+    resolve_at,
+)
 
 
 @dataclass
@@ -112,8 +118,13 @@ class McpCaptureProxy(CaptureProxy):
 
         # Tools are registered lazily; the module-level `mcp` has none until this runs.
         register_all_tools(is_oss=True)
+        # The token comes from the same environment variable the DataHub SDK
+        # and MCP server already read. None is correct for an instance with
+        # metadata service auth off, which is the OSS default and the only mode
+        # this has been exercised against; against an auth-enabled instance the
+        # MCP calls 401 without it.
         self._ctx = with_datahub_client(
-            DataHubClient(server=self.base_url, token=None)
+            DataHubClient(server=self.base_url, token=default_token())
         )
         self._ctx.__enter__()
         self._client = Client(mcp)
