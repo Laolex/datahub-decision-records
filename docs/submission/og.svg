@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#fbfbfa"/>
+  <rect width="1200" height="8" fill="#7a4d1e"/>
+
+  <text x="72" y="92" font-family="DejaVu Sans Mono" font-size="18" letter-spacing="2.4"
+        fill="#5c5c56">DHDR · DECISION RECORDS FOR DATAHUB AGENTS</text>
+
+  <text x="72" y="176" font-family="DejaVu Serif" font-size="56" font-weight="bold" fill="#1a1a18">Which version of the world</text>
+  <text x="72" y="240" font-family="DejaVu Serif" font-size="56" font-weight="bold" fill="#1a1a18">was that decision made in?</text>
+
+  <text x="72" y="298" font-family="DejaVu Serif" font-size="25" fill="#5c5c56">An agent that decides from DataHub context, and can prove which</text>
+  <text x="72" y="332" font-family="DejaVu Serif" font-size="25" fill="#5c5c56">metadata revision justified each decision.</text>
+
+  <rect x="72" y="380" width="418" height="148" rx="12" fill="#ffffff" stroke="#2f6b3a" stroke-width="2.5"/>
+  <text x="102" y="420" font-family="DejaVu Sans Mono" font-size="16" letter-spacing="1.6" fill="#5c5c56">AS THE AGENT SAW IT</text>
+  <text x="102" y="472" font-family="DejaVu Sans Mono" font-size="44" font-weight="bold" fill="#2f6b3a">admit</text>
+  <text x="102" y="508" font-family="DejaVu Sans Mono" font-size="21" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v941</tspan></text>
+
+  <rect x="710" y="380" width="418" height="148" rx="12" fill="#ffffff" stroke="#9a3324" stroke-width="2.5"/>
+  <text x="740" y="420" font-family="DejaVu Sans Mono" font-size="16" letter-spacing="1.6" fill="#5c5c56">AS IT ACTUALLY WAS</text>
+  <text x="740" y="472" font-family="DejaVu Sans Mono" font-size="44" font-weight="bold" fill="#9a3324">reject</text>
+  <text x="740" y="508" font-family="DejaVu Sans Mono" font-size="21" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v942</tspan></text>
+
+  <text x="600" y="440" text-anchor="middle" font-family="DejaVu Serif" font-size="20" font-style="italic" fill="#5c5c56">same agent</text>
+  <text x="600" y="468" text-anchor="middle" font-family="DejaVu Serif" font-size="20" font-style="italic" fill="#5c5c56">same call</text>
+  <text x="600" y="496" text-anchor="middle" font-family="DejaVu Serif" font-size="20" font-style="italic" fill="#5c5c56">seconds apart</text>
+
+  <line x1="72" y1="562" x2="1128" y2="562" stroke="#dededa" stroke-width="1.5"/>
+  <text x="72" y="600" font-family="DejaVu Sans Mono" font-size="17" fill="#5c5c56">github.com/Laolex/datahub-decision-records</text>
+  <text x="1128" y="600" text-anchor="end" font-family="DejaVu Sans Mono" font-size="17" fill="#5c5c56">C0–C3 · a class, never a percentage</text>
+</svg>
