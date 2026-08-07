@@ -23,7 +23,7 @@ Hackathon*, track **Agents That Do Real Work**.
   [datahub#18851](https://github.com/datahub-project/datahub/issues/18851), and a pull request —
   [datahub#18869](https://github.com/datahub-project/datahub/pull/18869), open, tests passing on
   DataHub's CI.
-- **Try it in a minute:** `pip install -e '.[dev]' && pytest -q` — 58 of 93 tests run with no
+- **Try it in a minute:** `pip install -e '.[dev]' && pytest -q` — 71 of 106 tests run with no
   DataHub at all. Or read the [hosted walkthrough](https://laolex.github.io/datahub-decision-records/),
   every block of which was produced by this code against a live instance.
 
@@ -91,7 +91,7 @@ with commentary. Its certificate links resolve.
 ```bash
 git clone https://github.com/Laolex/datahub-decision-records && cd datahub-decision-records
 pip install -e '.[dev]'
-pytest -q          # 58 pass with no instance; the rest skip by marker, not by failing
+pytest -q          # 71 pass with no instance; the rest skip by marker, not by failing
 ```
 
 **The whole thing against a live DataHub** — `python scripts/quickstart.py`, one command from a
@@ -578,7 +578,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-93 tests: 58 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
+106 tests: 71 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,

@@ -15,8 +15,9 @@ import asyncio
 import logging
 import sys
 import time
+from pathlib import Path
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # The MCP server logs every GraphQL query it sends at DEBUG. Useful when
 # debugging the adapter, actively unhelpful in a preflight whose entire job is

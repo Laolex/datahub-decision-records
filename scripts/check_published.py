@@ -26,8 +26,14 @@ what to do, which is almost always: commit `docs/certs/` and push.
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 
-sys.path.insert(0, "/opt/datahub-decision-records")
+# Derived, never hardcoded. An absolute path here does not fail loudly on a
+# clone somewhere else — it silently imports `fixtures` from whatever checkout
+# happens to sit at that path, so the script reports on a different working
+# tree than the one it was run from. Where that path does not exist at all, the
+# script the README tells a reader to run exits 1 with a traceback.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from dhdr.coordinate import DEFAULT_BASE_URL  # noqa: E402
 from dhdr.publish import read_published  # noqa: E402
