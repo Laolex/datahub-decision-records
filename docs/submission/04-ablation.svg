@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <rect width="1500" height="1000" fill="#fbfbfa"/>
+  <rect width="1500" height="10" fill="#7a4d1e"/>
+
+  <text x="80" y="86" font-family="DejaVu Sans Mono" font-size="19" letter-spacing="2.4"
+        fill="#5c5c56">TESTING OUR OWN NECESSITY · examples/ablation.txt</text>
+
+  <text x="80" y="152" font-family="DejaVu Serif" font-size="52" font-weight="bold"
+        fill="#1a1a18">Which captured field is load-bearing</text>
+  <text x="80" y="196" font-family="DejaVu Serif" font-size="26" fill="#5c5c56">Delete one field from the record, re-run the certifier, see what class survives.</text>
+
+  <!-- table -->
+  <rect x="80" y="240" width="1340" height="520" rx="12" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+
+  <text x="120" y="288" font-family="DejaVu Sans Mono" font-size="17" letter-spacing="1.6" fill="#5c5c56">REMOVED</text>
+  <text x="1000" y="288" font-family="DejaVu Sans Mono" font-size="17" letter-spacing="1.6" fill="#5c5c56">CLASS STILL AVAILABLE</text>
+  <line x1="120" y1="306" x2="1380" y2="306" stroke="#dededa" stroke-width="1.5"/>
+
+  <text x="120" y="352" font-family="DejaVu Sans Mono" font-size="22" fill="#5c5c56">(none — full record)</text>
+  <text x="1000" y="352" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#2f6b3a">C2</text>
+
+  <text x="120" y="404" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">execution.pure</text>
+  <text x="1000" y="404" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#9a3324">none</text>
+
+  <text x="120" y="456" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">predicate.id</text>
+  <text x="1000" y="456" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#1a1a18">C0</text>
+
+  <text x="120" y="508" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">policy.resolved_value</text>
+  <text x="1000" y="508" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#1a1a18">C0</text>
+
+  <text x="120" y="560" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">candidates.completeness</text>
+  <text x="1000" y="560" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#1a1a18">C1</text>
+
+  <rect x="104" y="580" width="1272" height="52" rx="6" fill="#f7f2ea"/>
+  <text x="120" y="614" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">policy.resolution.revision</text>
+  <text x="1000" y="614" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#7a4d1e">C2</text>
+  <text x="1080" y="614" font-family="DejaVu Serif" font-size="21" font-style="italic" fill="#7a4d1e">← this one goes against us</text>
+
+  <text x="120" y="666" font-family="DejaVu Sans Mono" font-size="22" fill="#1a1a18">read binding (unbound read)</text>
+  <text x="1000" y="666" font-family="DejaVu Sans Mono" font-size="24" font-weight="bold" fill="#9a3324">none</text>
+
+  <line x1="120" y1="700" x2="1380" y2="700" stroke="#dededa" stroke-width="1.5"/>
+  <text x="120" y="736" font-family="DejaVu Serif" font-size="22" fill="#5c5c56">Two rows collapse the record to <tspan font-family="DejaVu Sans Mono" font-size="20" fill="#9a3324" font-weight="bold">none</tspan>. Everything else degrades gracefully.</text>
+
+  <rect x="80" y="800" width="6" height="128" fill="#7a4d1e"/>
+  <text x="112" y="846" font-family="DejaVu Serif" font-size="27" font-style="italic" fill="#1a1a18">Deleting the revision annotation from the record costs nothing.</text>
+  <text x="112" y="884" font-family="DejaVu Serif" font-size="27" font-style="italic" fill="#1a1a18">What carries the soundness is the refusal to certify an unbound</text>
+  <text x="112" y="922" font-family="DejaVu Serif" font-size="27" font-style="italic" fill="#1a1a18">read — not the annotation. We publish the result that says so.</text>
+</svg>

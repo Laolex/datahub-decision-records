@@ -78,7 +78,10 @@ And its companion, which is why this ships as something a team installs rather t
 
 ## How it works
 
-Five units, each independently testable.
+![The five units that certify a decision, and the two that deliver it](docs/submission/05-how-it-works.png)
+
+Seven units, each independently testable: five that make a decision certifiable, then two that
+put the certificate where someone will act on it.
 
 **The context proxy** (`src/dhdr/proxy.py`) sits between the agent and DataHub's MCP server.
 It forwards every tool call over real MCP transport and returns *the MCP response itself* to
@@ -147,6 +150,24 @@ read, and detects being overwritten. It does **not** close the race where anothe
 between our read and our write. Both platform facts are pinned by tests that fail if either
 mechanism starts working.
 
+**The SARIF mapper** (`src/dhdr/sarif.py`) turns a certificate into the format code scanning
+already understands, so a decision lands as an annotation on the line of SQL that caused it
+rather than in a terminal somebody ran once. SARIF is the right carrier because its `level` is
+ordinal — note, warning, error — so the capability classes map onto it directly and nobody has
+to invent a number: C0 and C1 are `note`, C2 `warning`, C3 `error`. A record that certifies
+nothing gets its own rule, at `warning` by default so a gap in instrumentation does not read as
+a code defect, and at `error` under `--strict` once a team has earned confidence in coverage.
+The annotation is placed on the line under decision, because a code host renders a result inline
+only when it falls on a line the diff touches.
+
+**The CLI** (`src/dhdr/cli.py`, the `dhdr` command) is the only place the *order* lives: it wires
+a scenario to the proxy, runs it, certifies the result, writes the certificate back and emits the
+SARIF. Everything above it is a library that can be called without it, and their own dependencies
+run one way and never cycle — `proxy` on `coordinate`, `certify` on `proxy`, `publish` and
+`sarif` on `certify`. Nothing imports the CLI. That is why it is the largest file here:
+sequencing is its whole job, and keeping it in one place is what stops the units from having to
+know about each other.
+
 The capture core is domain-ignorant by construction. It knows about reads, versions,
 predicates and candidate sets. It does not know what a schema, an owner or a pipeline is. If a
 scenario requires a change to the core, the core is wrong.
@@ -166,6 +187,50 @@ reading through the openapi **v2** endpoint. That endpoint returns 400 for `glos
 So a lineage-only test suite reports a healthy coordinate layer that cannot read three aspects at
 all. `history()` comes back empty, every read binds to nothing, and nothing raises. It is now a v3
 read, with a regression test that exercises a non-lineage aspect.
+
+## What a record contains
+
+The record is the product, so here is every field it carries. Format and hash chaining come from
+[`reckon-rcdr`](https://pypi.org/project/reckon-rcdr/); what goes in them is this project's
+argument. A live example is [`examples/record-then.json`](examples/record-then.json).
+
+The last column is measured, not asserted: it is what
+[`examples/ablation.txt`](examples/ablation.txt) reports when that field is deleted from an
+otherwise complete record and the certifier is re-run. Fields the ablation does not cover are
+marked `—`; that means untested, not unimportant.
+
+| field | holds | deleting it costs |
+|---|---|---|
+| `outcome` | what was decided — `admit` or `reject`. | — |
+| `predicate.id` `.expression` `.operator` | the rule that decided, as an id, a readable form and its comparison operator. | C2 → **C0** |
+| `compared.value` `.type` | the value the predicate was evaluated against, and its type. | — |
+| `policy.key` `.resolved_value` | which policy applied and the value it resolved to. | C2 → **C0** |
+| `policy.resolution.source` | the DataHub URN and aspect the policy was resolved from, revision-qualified. | — |
+| `policy.resolution.revision` | the aspect version in force when the deciding read happened. | C2 → **C2** — see below |
+| `policy.resolution.provenance` | where the policy came from — `bundled` here, so a reader can tell configuration from default. | — |
+| `candidates.items` | every action considered, each with its predicate, compared value and outcome. This is what makes the C1 and C2 counterfactuals answerable. | — |
+| `candidates.completeness` | whether that set was `exhaustive` or partial. A counterfactual over a set that might be missing an option is not an answer. | C2 → **C1** |
+| `reads[].source` | the URN, aspect and bound revision of each deciding read — `…#upstreamlineage@v935`. | unbound read → **none** |
+| `reads[].value_digest` | a digest of the value the agent actually received, so a substituted value is detectable. | — |
+| `reads[].key` | which predicate input this read supplied. | — |
+| `writes` | metadata this decision mutated. Non-empty is what raises the C3 boundary. | — |
+| `action.id` `.params_digest` | the change being decided about, committed to by digest so the certificate names which change it certified without carrying a copy that can drift. | — |
+| `execution.pure` | whether the decision function was pure. | C2 → **none** |
+| `execution.runtime` `.clock` `.seed` `.deps_digest` `.path_digest` | the execution fingerprint: interpreter, any clock or seed read, and digests of dependencies and code path. `null` for clock and seed is a recorded absence, not a missing field. | — |
+| `decision_id` `run_id` `sequence` `ts` | identity and ordering within a run. | — |
+| `capture.emitter` `.sdk_version` `rcdr_version` | what wrote the record and in which format version. | — |
+
+Two rows deserve reading twice.
+
+**`execution.pure` is the most load-bearing field in the record**, and it is not the one this
+project is about. Remove it and nothing is certifiable at all: an impure decision function could
+have consulted anything, so no replay proves anything, whatever else was captured.
+
+**`policy.resolution.revision` costs nothing to delete.** The class stays C2. That result goes
+against the design law printed at the top of this README, and it is published rather than
+buried: what actually carries the soundness is `reads[].source` — the *binding*, and the refusal
+to certify when a read has none. The revision on the record is the human-readable name for a
+fact the binding already established. See [Ablation](#ablation).
 
 ## Scenarios
 
@@ -562,11 +627,42 @@ fact-matching, both scenario agents, the certifier and its pairing guard, write-
 
 ## Invariants
 
-The full set of eleven invariants — the properties that must hold when every line of this
-implementation has been replaced — are enumerated in the design document and summarised above.
-Two of them constrain the most code. First, the decision input is the response the agent received.
-Second, absence of evidence is recorded as absence — a field that was not captured stays
-distinguishable from a field captured as empty.
+These must hold when every line of this implementation has been replaced. They are the
+specification; everything above is one way of satisfying it.
+
+1. **A decision record names the metadata revision that justified it.** Every context read an
+   agent performs is bound to the aspect version in force at read time. A record that cannot name
+   its revision is marked unsound rather than reported as passing.
+2. **The verifier reports a capability class, never a percentage.** A score over incommensurable
+   kinds of missing evidence manufactures false confidence.
+3. **C3 is certified as a boundary, not as a pass.** Where a decision mutates metadata a later
+   decision reads, the certificate states where deductive evidence ends and counterfactual
+   inference begins, and never claims past that line.
+4. **The capture core is domain-ignorant.** It knows about reads, versions, predicates and
+   candidate sets. It does not know what a schema, an owner or a pipeline is. If a scenario
+   requires a change to the core, the core is wrong.
+5. **Absence of evidence is recorded as absence.** A field that was not captured stays
+   distinguishable from a field captured as empty.
+6. **A decision that is not published is not inherited.** The certificate is written back to the
+   DataHub entity the decision was about. The agent's own write is itself state a later decision
+   may read, so it is surfaced as a C3 boundary rather than quietly excluded.
+7. **The decision input is the response the agent received.** A re-fetched value is never
+   substituted for it, however similar — between two fetches the metadata may have moved, and
+   then the revision on the record is not the revision that decided.
+8. **A revision is bound by matching facts, never by timestamp proximity alone.** Proximity
+   proposes a candidate; the deciding facts from both payloads must then agree. Zero matches means
+   a write landed in between; more than one means the facts do not discriminate. Both are unbound.
+9. **An unbound deciding read certifies nothing.** The class collapses to none — not a class
+   reported alongside a warning. "C2, but one read is unbound" is exactly the phrasing a hurried
+   reader takes as certification.
+10. **The published artifact must resolve.** The certificate is an HTTPS URL a later human or
+    agent can open. A summary line in a description is not the certificate, and a private URI
+    scheme resolves for nobody.
+11. **The self-write boundary is derived from evidence.** It follows from a recorded publish
+    event, never from a flag the caller passed. A caller asserting that a write happened is not
+    proof that it did.
+
+Invariants 7 and 5 constrain the most code; 9 is the one a reviewer should try hardest to break.
 
 ## Non-goals
 

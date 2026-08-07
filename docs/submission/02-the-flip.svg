@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <rect width="1500" height="1000" fill="#fbfbfa"/>
+  <rect width="1500" height="10" fill="#7a4d1e"/>
+
+  <text x="80" y="86" font-family="DejaVu Sans Mono" font-size="19" letter-spacing="2.4"
+        fill="#5c5c56">THE HEADLINE RESULT · examples/demo-transcript.txt</text>
+
+  <text x="80" y="152" font-family="DejaVu Serif" font-size="52" font-weight="bold"
+        fill="#1a1a18">One agent, one question, asked twice</text>
+  <text x="80" y="196" font-family="DejaVu Serif" font-size="26" fill="#5c5c56">Both answers are right. They are right about different worlds.</text>
+
+  <!-- admit block -->
+  <rect x="80" y="240" width="1340" height="248" rx="12" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <rect x="80" y="240" width="7" height="248" rx="3.5" fill="#2f6b3a"/>
+  <text x="120" y="284" font-family="DejaVu Sans Mono" font-size="17" letter-spacing="1.6" fill="#5c5c56">AS THE AGENT SAW IT</text>
+  <text x="120" y="332" font-family="DejaVu Sans Mono" font-size="34" font-weight="bold" fill="#2f6b3a">admit</text>
+  <text x="330" y="332" font-family="DejaVu Sans Mono" font-size="23" fill="#5c5c56">upstreamLineage <tspan fill="#1a1a18" font-weight="bold">v941</tspan>   ·   class <tspan fill="#1a1a18" font-weight="bold">C2</tspan></text>
+  <rect x="120" y="358" width="1260" height="102" rx="6" fill="#f2f1ee" stroke="#dededa"/>
+  <text x="140" y="390" font-family="DejaVu Sans Mono" font-size="19" fill="#5c5c56">-- nothing reads promo_code at the bound revision</text>
+  <text x="140" y="416" font-family="DejaVu Sans Mono" font-size="19" fill="#5c5c56">-- proposed, not applied by dhdr</text>
+  <text x="140" y="444" font-family="DejaVu Sans Mono" font-size="19" fill="#1a1a18">ALTER TABLE ...order_entry.orders DROP COLUMN promo_code;</text>
+
+  <!-- interval -->
+  <text x="750" y="536" text-anchor="middle" font-family="DejaVu Serif" font-size="24" font-style="italic"
+        fill="#7a4d1e">· · ·   the world moves: a pipeline change rewires who reads orders   · · ·</text>
+
+  <!-- reject block -->
+  <rect x="80" y="572" width="1340" height="248" rx="12" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <rect x="80" y="572" width="7" height="248" rx="3.5" fill="#9a3324"/>
+  <text x="120" y="616" font-family="DejaVu Sans Mono" font-size="17" letter-spacing="1.6" fill="#5c5c56">SECONDS LATER · THE IDENTICAL MCP CALL</text>
+  <text x="120" y="664" font-family="DejaVu Sans Mono" font-size="34" font-weight="bold" fill="#9a3324">reject</text>
+  <text x="330" y="664" font-family="DejaVu Sans Mono" font-size="23" fill="#5c5c56">upstreamLineage <tspan fill="#1a1a18" font-weight="bold">v942</tspan>   ·   class <tspan fill="#1a1a18" font-weight="bold">C2</tspan></text>
+  <rect x="120" y="690" width="1260" height="102" rx="6" fill="#f2f1ee" stroke="#dededa"/>
+  <text x="140" y="722" font-family="DejaVu Sans Mono" font-size="19" fill="#5c5c56">-- analytics.order_history still reads it; the drop is refused</text>
+  <text x="140" y="748" font-family="DejaVu Sans Mono" font-size="19" fill="#5c5c56">-- proposed, not applied by dhdr</text>
+  <text x="140" y="776" font-family="DejaVu Sans Mono" font-size="19" fill="#1a1a18">COMMENT ON COLUMN ...orders.promo_code IS 'deprecated: ...';</text>
+
+  <line x1="80" y1="880" x2="1420" y2="880" stroke="#dededa" stroke-width="1.5"/>
+  <text x="80" y="928" font-family="DejaVu Serif" font-size="27" font-style="italic" fill="#1a1a18">Neither log can tell you which world it was made in. Both certificates can.</text>
+  <text x="1420" y="928" text-anchor="end" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">dhdr</text>
+</svg>

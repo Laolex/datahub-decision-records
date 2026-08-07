@@ -22,7 +22,7 @@
         fill="#5c5c56">AS THE AGENT SAW IT</text>
   <text x="114" y="570" font-family="DejaVu Sans Mono" font-size="58" font-weight="bold"
         fill="#2f6b3a">admit</text>
-  <text x="114" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v661</tspan></text>
+  <text x="114" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v941</tspan></text>
 
   <!-- between -->
   <text x="750" y="519" text-anchor="middle" font-family="DejaVu Serif" font-size="21"
@@ -38,7 +38,7 @@
         fill="#5c5c56">AS IT ACTUALLY WAS</text>
   <text x="894" y="570" font-family="DejaVu Sans Mono" font-size="58" font-weight="bold"
         fill="#9a3324">reject</text>
-  <text x="894" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v662</tspan></text>
+  <text x="894" y="620" font-family="DejaVu Sans Mono" font-size="25" fill="#5c5c56">bound to <tspan fill="#1a1a18" font-weight="bold">v942</tspan></text>
 
   <!-- law -->
   <rect x="80" y="722" width="6" height="128" fill="#7a4d1e"/>

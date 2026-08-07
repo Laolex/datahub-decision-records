@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <rect width="1500" height="1000" fill="#fbfbfa"/>
+  <rect width="1500" height="10" fill="#7a4d1e"/>
+
+  <text x="80" y="86" font-family="DejaVu Sans Mono" font-size="19" letter-spacing="2.4"
+        fill="#5c5c56">WHAT A CERTIFICATE REPORTS</text>
+
+  <text x="80" y="152" font-family="DejaVu Serif" font-size="52" font-weight="bold"
+        fill="#1a1a18">A class, never a percentage</text>
+  <text x="80" y="196" font-family="DejaVu Serif" font-size="26" fill="#5c5c56">A score averaged over incommensurable missing evidence manufactures</text>
+  <text x="80" y="230" font-family="DejaVu Serif" font-size="26" fill="#5c5c56">exactly the false confidence this project exists to prevent.</text>
+
+  <!-- none -->
+  <rect x="80" y="278" width="1340" height="86" rx="10" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <rect x="80" y="278" width="7" height="86" rx="3.5" fill="#9a3324"/>
+  <text x="124" y="332" font-family="DejaVu Sans Mono" font-size="30" font-weight="bold" fill="#9a3324">none</text>
+  <text x="300" y="316" font-family="DejaVu Serif" font-size="23" fill="#1a1a18">A deciding read could not be tied to a revision, so nothing is certifiable.</text>
+  <text x="300" y="346" font-family="DejaVu Serif" font-size="23" font-style="italic" fill="#5c5c56">Not “C2 with a warning”. The refusal is the product.</text>
+
+  <!-- C0 -->
+  <rect x="80" y="378" width="1340" height="72" rx="10" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <rect x="80" y="378" width="7" height="72" rx="3.5" fill="#5c5c56"/>
+  <text x="124" y="424" font-family="DejaVu Sans Mono" font-size="30" font-weight="bold" fill="#1a1a18">C0</text>
+  <text x="300" y="422" font-family="DejaVu Serif" font-size="23" fill="#1a1a18">Reproduces <tspan font-style="italic">this</tspan> decision identically. Identity replay.</text>
+
+  <!-- C1 -->
+  <rect x="80" y="464" width="1340" height="72" rx="10" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <rect x="80" y="464" width="7" height="72" rx="3.5" fill="#5c5c56"/>
+  <text x="124" y="510" font-family="DejaVu Sans Mono" font-size="30" font-weight="bold" fill="#1a1a18">C1</text>
+  <text x="300" y="508" font-family="DejaVu Serif" font-size="23" fill="#1a1a18">Also answers whether a <tspan font-style="italic">stricter</tspan> policy would have changed the outcome.</text>
+
+  <!-- C2 -->
+  <rect x="80" y="550" width="1340" height="86" rx="10" fill="#ffffff" stroke="#2f6b3a" stroke-width="2.5"/>
+  <rect x="80" y="550" width="7" height="86" rx="3.5" fill="#2f6b3a"/>
+  <text x="124" y="604" font-family="DejaVu Sans Mono" font-size="30" font-weight="bold" fill="#2f6b3a">C2</text>
+  <text x="300" y="588" font-family="DejaVu Serif" font-size="23" fill="#1a1a18">Also answers whether a <tspan font-style="italic">looser</tspan> policy would have.</text>
+  <text x="300" y="618" font-family="DejaVu Serif" font-size="23" font-style="italic" fill="#5c5c56">What a bound, complete record earns. Both demo decisions certify here.</text>
+
+  <!-- cliff -->
+  <line x1="80" y1="672" x2="1420" y2="672" stroke="#7a4d1e" stroke-width="2" stroke-dasharray="9 7"/>
+  <rect x="560" y="656" width="380" height="32" fill="#fbfbfa"/>
+  <text x="750" y="680" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="18" letter-spacing="1.8"
+        fill="#7a4d1e">A HARD CLIFF, NOT A NEXT STEP</text>
+
+  <!-- C3 -->
+  <rect x="80" y="708" width="1340" height="86" rx="10" fill="#f2f1ee" stroke="#dededa" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <rect x="80" y="708" width="7" height="86" rx="3.5" fill="#dededa"/>
+  <text x="124" y="762" font-family="DejaVu Sans Mono" font-size="30" font-weight="bold" fill="#5c5c56">C3</text>
+  <text x="300" y="746" font-family="DejaVu Serif" font-size="23" fill="#5c5c56">Decisions whose own writes change what later decisions read.</text>
+  <text x="300" y="776" font-family="DejaVu Sans Mono" font-size="21" font-weight="bold" fill="#9a3324">NEVER CERTIFIED</text>
+  <text x="530" y="776" font-family="DejaVu Serif" font-size="23" font-style="italic" fill="#5c5c56">— reported as the boundary where deduction stops.</text>
+
+  <line x1="80" y1="866" x2="1420" y2="866" stroke="#dededa" stroke-width="1.5"/>
+  <text x="80" y="918" font-family="DejaVu Serif" font-size="27" font-style="italic" fill="#1a1a18">We refuse to vouch for a decision rather than issue an approval that looks clean.</text>
+</svg>

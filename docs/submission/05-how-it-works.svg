@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1000" viewBox="0 0 1500 1000">
+  <rect width="1500" height="1000" fill="#fbfbfa"/>
+  <rect width="1500" height="10" fill="#7a4d1e"/>
+
+  <text x="80" y="86" font-family="DejaVu Sans Mono" font-size="19" letter-spacing="2.4"
+        fill="#5c5c56">HOW IT WORKS</text>
+
+  <text x="80" y="152" font-family="DejaVu Serif" font-size="52" font-weight="bold"
+        fill="#1a1a18">Seven units, one order of operations</text>
+
+  <!-- source band -->
+  <rect x="80" y="196" width="1340" height="66" rx="10" fill="#f2f1ee" stroke="#dededa" stroke-width="1.5"/>
+  <text x="112" y="238" font-family="DejaVu Sans Mono" font-size="21" fill="#1a1a18">DataHub Core v1.5.0.6</text>
+  <text x="480" y="238" font-family="DejaVu Sans Mono" font-size="20" fill="#5c5c56">mcp-server-datahub  ·  /openapi/v3 aspect API</text>
+
+  <!-- rail -->
+  <line x1="128" y1="290" x2="128" y2="742" stroke="#dededa" stroke-width="3"/>
+
+  <!-- 1 -->
+  <circle cx="128" cy="312" r="17" fill="#7a4d1e"/>
+  <text x="128" y="319" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" font-weight="bold" fill="#fbfbfa">1</text>
+  <text x="176" y="306" font-family="DejaVu Serif" font-size="26" font-weight="bold" fill="#1a1a18">The context proxy</text>
+  <text x="470" y="306" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">src/dhdr/proxy.py</text>
+  <text x="176" y="338" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">Forwards the call over real MCP. The MCP response itself is the decision input —</text>
+  <text x="176" y="364" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">a re-fetched value is never substituted for it, however similar.</text>
+
+  <!-- 2 -->
+  <circle cx="128" cy="424" r="17" fill="#7a4d1e"/>
+  <text x="128" y="431" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" font-weight="bold" fill="#fbfbfa">2</text>
+  <text x="176" y="418" font-family="DejaVu Serif" font-size="26" font-weight="bold" fill="#1a1a18">Revision binding</text>
+  <text x="470" y="418" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">src/dhdr/coordinate.py</text>
+  <text x="176" y="450" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">Resolves the aspect version in force at that instant. Deciding facts must agree;</text>
+  <text x="176" y="476" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">zero or many matches means <tspan font-family="DejaVu Sans Mono" font-size="19" font-weight="bold" fill="#9a3324">unbound</tspan>, and unbound collapses the class to none.</text>
+
+  <!-- 3 -->
+  <circle cx="128" cy="536" r="17" fill="#7a4d1e"/>
+  <text x="128" y="543" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" font-weight="bold" fill="#fbfbfa">3</text>
+  <text x="176" y="530" font-family="DejaVu Serif" font-size="26" font-weight="bold" fill="#1a1a18">The recorded agent</text>
+  <text x="470" y="530" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">scenarios/schema_ops.py</text>
+  <text x="176" y="562" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">Decides whether dropping a column is safe, over real datasets from DataHub's</text>
+  <text x="176" y="588" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">showcase-ecommerce datapack, emitting a Reckon decision record as it goes.</text>
+
+  <!-- 4 -->
+  <circle cx="128" cy="648" r="17" fill="#7a4d1e"/>
+  <text x="128" y="655" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" font-weight="bold" fill="#fbfbfa">4</text>
+  <text x="176" y="642" font-family="DejaVu Serif" font-size="26" font-weight="bold" fill="#1a1a18">The certifier</text>
+  <text x="470" y="642" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">src/dhdr/certify.py</text>
+  <text x="176" y="674" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">Reports a class, C0 to C3. It also refuses a record-and-reads pairing it cannot</text>
+  <text x="176" y="700" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">justify — every piece can be honest while the assembly is wrong.</text>
+
+  <!-- 5 -->
+  <circle cx="128" cy="760" r="17" fill="#7a4d1e"/>
+  <text x="128" y="767" text-anchor="middle" font-family="DejaVu Sans Mono" font-size="17" font-weight="bold" fill="#fbfbfa">5</text>
+  <text x="176" y="754" font-family="DejaVu Serif" font-size="26" font-weight="bold" fill="#1a1a18">Write-back</text>
+  <text x="470" y="754" font-family="DejaVu Sans Mono" font-size="18" fill="#5c5c56">src/dhdr/publish.py</text>
+  <text x="176" y="786" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">Puts the certificate into the dataset's institutionalMemory, so the next reader</text>
+  <text x="176" y="812" font-family="DejaVu Serif" font-size="21" fill="#5c5c56">inherits it. The URL must resolve, or it is not memory.</text>
+
+  <!-- outputs -->
+  <rect x="80" y="856" width="655" height="88" rx="10" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <text x="112" y="884" font-family="DejaVu Sans Mono" font-size="16" letter-spacing="1.6" fill="#5c5c56">6 · SARIF MAPPER</text>
+  <text x="360" y="884" font-family="DejaVu Sans Mono" font-size="15" fill="#5c5c56">src/dhdr/sarif.py</text>
+  <text x="112" y="918" font-family="DejaVu Serif" font-size="21" fill="#1a1a18">class → SARIF level, on the line under decision</text>
+
+  <rect x="765" y="856" width="655" height="88" rx="10" fill="#ffffff" stroke="#dededa" stroke-width="1.5"/>
+  <text x="797" y="884" font-family="DejaVu Sans Mono" font-size="16" letter-spacing="1.6" fill="#5c5c56">7 · CLI</text>
+  <text x="1045" y="884" font-family="DejaVu Sans Mono" font-size="15" fill="#5c5c56">src/dhdr/cli.py</text>
+  <text x="797" y="918" font-family="DejaVu Serif" font-size="21" fill="#1a1a18">the only place the order of operations lives</text>
+
+  <text x="1388" y="238" text-anchor="end" font-family="DejaVu Serif" font-size="20" font-style="italic" fill="#7a4d1e">proposed, never applied</text>
+
+  <!-- pull quote, fills the right column -->
+  <rect x="1096" y="330" width="324" height="286" rx="10" fill="#f7f2ea" stroke="#e6dccc" stroke-width="1.5"/>
+  <rect x="1096" y="330" width="6" height="286" rx="3" fill="#7a4d1e"/>
+  <text x="1128" y="372" font-family="DejaVu Sans Mono" font-size="16" letter-spacing="1.6" fill="#7a4d1e">THE DESIGN LAW</text>
+  <text x="1128" y="418" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">A record that cannot</text>
+  <text x="1128" y="448" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">name the revision it</text>
+  <text x="1128" y="478" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">was made against is</text>
+  <text x="1128" y="508" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">not a record of a</text>
+  <text x="1128" y="538" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">decision.</text>
+  <text x="1128" y="574" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">78 tests pass live —</text>
+  <text x="1128" y="598" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">43 need no instance</text>
+</svg>
