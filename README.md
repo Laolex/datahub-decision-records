@@ -1,5 +1,34 @@
 # dhdr — decision records for DataHub agents
 
+An agent that makes schema and access decisions from DataHub context, and can prove **which
+revision of that context justified each one**. Built for *Build with DataHub — The Agent
+Hackathon*, track **Agents That Do Real Work**.
+
+> **A record that cannot name the revision it was made against is not a record of a decision.**
+
+**If you are reading five of these, read these five lines.**
+
+- **The result.** The identical `get_lineage` call through DataHub's real MCP server, twice,
+  seconds apart while a pipeline change lands: `admit`, then `reject`. Both logs are identical.
+  Only the bound revision distinguishes them — [`examples/mcp-flip.txt`](examples/mcp-flip.txt).
+- **The result that goes against us.** The [ablation](#ablation) reports that deleting the
+  revision from the record costs nothing; what carries the soundness is the *refusal* to certify
+  an unbound read. Published rather than buried, because an entry that cannot show which part of
+  its own record is load-bearing has not shown the record is necessary.
+- **How correctness was checked from outside.** [`tests/test_oracle.py`](tests/test_oracle.py)
+  takes its ground truth from DataHub's own `metadata_aspect_v2` table in MySQL, not from our
+  model of it. That is how the `resolve_at`/`lastObserved` defect was found.
+- **Contributed upstream, not just filed.**
+  [mcp-server-datahub#181](https://github.com/acryldata/mcp-server-datahub/issues/181),
+  [datahub#18851](https://github.com/datahub-project/datahub/issues/18851), and a pull request —
+  [datahub#18869](https://github.com/datahub-project/datahub/pull/18869), open, tests passing on
+  DataHub's CI.
+- **Try it in a minute:** `pip install -e '.[dev]' && pytest -q` — 58 of 93 tests run with no
+  DataHub at all. Or read the [hosted walkthrough](https://laolex.github.io/datahub-decision-records/),
+  every block of which was produced by this code against a live instance.
+
+---
+
 **In plain terms, before any jargon.**
 
 A company's data lives in thousands of tables. Some of those tables feed dashboards that people
@@ -62,7 +91,7 @@ with commentary. Its certificate links resolve.
 ```bash
 git clone https://github.com/Laolex/datahub-decision-records && cd datahub-decision-records
 pip install -e '.[dev]'
-pytest -q          # 43 pass with no instance; the rest skip by marker, not by failing
+pytest -q          # 58 pass with no instance; the rest skip by marker, not by failing
 ```
 
 **The whole thing against a live DataHub** — `python scripts/quickstart.py`, one command from a
@@ -474,6 +503,18 @@ Requires a live DataHub Core instance for the integration tests. `DATAHUB_GMS_UR
 is — the same variable the DataHub SDK and MCP server read — and defaults to `localhost:8080`.
 Every entry point honours it, and `dhdr --base-url` overrides it for one run.
 
+`DATAHUB_GMS_TOKEN` carries a personal access token, again the variable the SDK and MCP server
+already read. Set it against DataHub Cloud or any instance with metadata service authentication
+enabled; leave it unset for the OSS quickstart, which ships with auth off. When it is set it
+reaches the aspect reads, the write-back and the MCP client alike — a client authenticated on
+some paths and not others fails in the least legible way available, because the retry in
+`publish.py` turns a 401 into "could not publish under contention", naming a race that never
+happened.
+
+**Stated plainly: this has only been exercised against an instance with auth off.** The token
+is threaded through every call site and pinned by tests, but no run against an auth-enabled
+instance has happened, so treat Cloud as untested rather than supported.
+
 ```bash
 pip install -e '.[dev]'
 python scripts/preflight.py      # check the instance can demonstrate the flip
@@ -526,7 +567,7 @@ Same agent. Same call. Opposite decisions.
 The log cannot tell you which world it was made in. The certificate can.
 ```
 
-78 tests: 43 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
+93 tests: 58 run with no DataHub at all, 35 need a live instance. The ones worth knowing about:
 
 - the agent calls `get_lineage` through the real MCP server, decides `admit`, and then — after a
   pipeline change wires a consumer to the table — makes the identical call and decides `reject`,

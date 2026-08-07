@@ -78,6 +78,6 @@
   <text x="1128" y="478" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">was made against is</text>
   <text x="1128" y="508" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">not a record of a</text>
   <text x="1128" y="538" font-family="DejaVu Serif" font-size="22" font-style="italic" fill="#1a1a18">decision.</text>
-  <text x="1128" y="574" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">78 tests pass live —</text>
-  <text x="1128" y="598" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">43 need no instance</text>
+  <text x="1128" y="574" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">93 tests pass live —</text>
+  <text x="1128" y="598" font-family="DejaVu Sans Mono" font-size="16" fill="#5c5c56">58 need no instance</text>
 </svg>
