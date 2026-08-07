@@ -499,6 +499,17 @@ The integration tests **mutate lineage on the instance**, because demonstrating 
 flips requires the world to actually move. Two suites running against the same DataHub at once
 will fight over that state and produce a spurious failure. One suite per instance.
 
+They also **publish**, to the same dataset the demo writes to. Each certificate mints an HTTPS
+URL whose artifact lands in `docs/certs/` and is not reachable until that is committed and
+pushed — so between a run and a push, the Documentation tab holds dead links. That is invariant
+10 failing on the exact screen that demonstrates it, and it is enforced by a person remembering,
+which is not enforcement. `scripts/check_published.py` fetches every published URL and exits
+non-zero on any that does not open. Run it after a suite run, and before showing anyone the tab.
+
+```bash
+python scripts/check_published.py    # 0 = every certificate on the tab opens
+```
+
 Requires a live DataHub Core instance for the integration tests. `DATAHUB_GMS_URL` says where it
 is — the same variable the DataHub SDK and MCP server read — and defaults to `localhost:8080`.
 Every entry point honours it, and `dhdr --base-url` overrides it for one run.
